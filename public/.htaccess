@@ -1,0 +1,23 @@
+# =============================================
+# File: public/.htaccess
+# Mục đích: Chuyển tất cả request về index.php (Front Controller)
+#
+# Ví dụ: user vào /?action=booking
+# → Apache thấy không có file "booking" thật
+# → RewriteRule chuyển về index.php?action=booking
+# =============================================
+
+Options -Indexes
+# Tắt hiển thị danh sách thư mục (bảo mật)
+
+RewriteEngine On
+
+# Nếu request là file thật (CSS, JS, ảnh) → cho qua, không redirect
+RewriteCond %{REQUEST_FILENAME} !-f
+# Nếu request là thư mục thật → cho qua
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Mọi request còn lại → về index.php, giữ nguyên query string
+RewriteRule ^(.*)$ index.php [QSA,L]
+# QSA = Query String Append (giữ ?action=booking)
+# L   = Last rule (dừng xử lý rule tiếp theo)
