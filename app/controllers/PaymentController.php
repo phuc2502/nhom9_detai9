@@ -111,13 +111,20 @@ class PaymentController
         $paid = $sePayApi->checkPayment($bookingId, $booking->getTotalPrice());
 
         if ($paid) {
-            $this->bookingService->updateBookingStatus($bookingId, 'confirmed');
+            $updated = $this->bookingService->updateBookingStatus($bookingId, 'confirmed');
 
-            // ── GỬI EMAIL XÁC NHẬN THANH TOÁN ──
-            try {
-                MailService::sendPaymentConfirmation($booking);
-            } catch (\Throwable $e) {
-                // Ghi log, không ảnh hưởng response
+            // Chỉ gửi email nếu chính request này là người update thành công
+            // (tránh gửi trùng khi webhook đã update trước)
+            if ($updated) {
+                try {
+                    // Re-fetch booking để có status mới nhất
+                    $freshBooking = $this->bookingService->findBookingById($bookingId);
+                    if ($freshBooking) {
+                        MailService::sendPaymentConfirmation($freshBooking);
+                    }
+                } catch (\Throwable $e) {
+                    // Ghi log, không ảnh hưởng response
+                }
             }
 
             echo json_encode([
@@ -172,12 +179,17 @@ class PaymentController
         $booking   = $this->bookingService->findBookingById($bookingId);
 
         if ($booking && $booking->getStatus() === 'pending') {
-            $this->bookingService->updateBookingStatus($bookingId, 'confirmed');
+            $updated = $this->bookingService->updateBookingStatus($bookingId, 'confirmed');
 
-            // ── GỬI EMAIL XÁC NHẬN THANH TOÁN (qua webhook) ──
-            try {
-                MailService::sendPaymentConfirmation($booking);
-            } catch (\Throwable $e) {}
+            // Chỉ gửi email nếu chính webhook này là người update thành công
+            if ($updated) {
+                try {
+                    $freshBooking = $this->bookingService->findBookingById($bookingId);
+                    if ($freshBooking) {
+                        MailService::sendPaymentConfirmation($freshBooking);
+                    }
+                } catch (\Throwable $e) {}
+            }
 
             SePayService::log('CONFIRMED', [
                 'bookingId' => $bookingId,
