@@ -15,11 +15,11 @@
         <div>
             <h4>Liên Kết</h4>
             <ul>
-                <li><a href="index.php">Trang Chủ</a></li>
-                <li><a href="rooms.php">Danh Sách Phòng</a></li>
-                <li><a href="tiennghi.php">Tiện nghi</a></li>
-                <li><a href="lienhe.php">Liên hệ</a></li>
-                <li><a href="gioithieu.php">Giới thiệu</a></li>
+                <li><a href="?action=home">Trang Chủ</a></li>
+                <li><a href="?action=rooms">Danh Sách Phòng</a></li>
+                <li><a href="?action=amenities">Tiện nghi</a></li>
+                <li><a href="?action=contact">Liên hệ</a></li>
+                <li><a href="?action=about">Giới thiệu</a></li>
             </ul>
         </div>
 

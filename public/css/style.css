@@ -245,9 +245,11 @@ img {
     border-radius: 8px;
     font-size: 1.05rem;
     font-weight: 700;
+    font-family: 'Nunito', sans-serif;
     cursor: pointer;
     transition: opacity 0.2s;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-search:hover {
@@ -847,8 +849,9 @@ img {
 .search-box {
     position: relative;
     z-index: 10;
-    width: calc(100% - 280px); /* tránh đè promo */
-    margin-left: 60px;
+    width: 100%;
+    max-width: 900px;
+    margin-left: 0;
 }
 
 .calendar-popup {
@@ -925,7 +928,8 @@ img {
 .search-box {
     position: relative;
     z-index: 10;
-    width: 700px;
+    width: 100%;
+    max-width: 900px;
 }
 
 /* Calendar grid fix */
