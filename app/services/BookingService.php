@@ -569,9 +569,9 @@ public function getSuggestedRooms(int $guests, array $excludeIds = [], int $limi
         // Logic OR: phòng có ÍT NHẤT 1 trong các tiện nghi được chọn là đủ điều kiện
         if (!empty($amenities)) {
             $rooms = array_values(array_filter($rooms, function (Room $room) use ($amenities) {
-                $roomAmenities = $room->getAmenities();
+                $roomAmenities = array_map('trim', $room->getAmenities());
                 foreach ($amenities as $selected) {
-                    if (in_array($selected, $roomAmenities, true)) return true;
+                    if (in_array(trim($selected), $roomAmenities, true)) return true;
                 }
                 return false;
             }));
@@ -595,19 +595,25 @@ public function getSuggestedRooms(int $guests, array $excludeIds = [], int $limi
      * Lấy tất cả tiện nghi duy nhất từ tất cả phòng.
      */
     public function getAllAmenities(): array
-{
-    // Danh sách tiện nghi cố định — chỉ hiển thị đúng 10 loại này
-    return [
-        'Wifi',
-        'Điều hòa',
-        'TV',
-        'Minibar',
-        'Ban công/View biển',
-        'Bồn tắm',
-        'Bàn làm việc',
-        'Phòng khách riêng',
-        'Hồ bơi',
-        'Butler 24/7',
-    ];
-}
+    {
+        // Đọc tiện nghi trực tiếp từ DB để đảm bảo tên luôn khớp với dữ liệu thực
+        $stmt = $this->db->query("SELECT amenities FROM rooms WHERE is_active = 1 AND amenities IS NOT NULL");
+        $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $all = [];
+        foreach ($rows as $json) {
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $am) {
+                    $am = trim($am);
+                    if ($am !== '' && !in_array($am, $all, true)) {
+                        $all[] = $am;
+                    }
+                }
+            }
+        }
+
+        sort($all);
+        return $all;
+    }
 }
