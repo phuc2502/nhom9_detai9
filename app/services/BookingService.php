@@ -501,7 +501,9 @@ public function getSuggestedRooms(int $guests, array $excludeIds = [], int $limi
         string    $sortBy    = 'price_asc',
         ?DateTime $checkIn   = null,
         ?DateTime $checkOut  = null,
-        int       $guests    = 0
+        int       $guests    = 0,
+        int       $adults    = 0,
+        int       $children  = 0
     ): array {
         $conditions = ['is_active = 1'];
         $params     = [];
@@ -518,7 +520,17 @@ public function getSuggestedRooms(int $guests, array $excludeIds = [], int $limi
             $conditions[] = 'type = :type';
             $params[':type'] = $type;
         }
-        if ($guests > 0) {
+        // Lọc riêng theo số người lớn và trẻ em
+        if ($adults > 0) {
+            $conditions[] = 'max_adults >= :adults';
+            $params[':adults'] = $adults;
+        }
+        if ($children > 0) {
+            $conditions[] = 'max_children >= :children';
+            $params[':children'] = $children;
+        }
+        // Fallback: nếu không nhập riêng thì vẫn lọc tổng khách
+        if ($adults === 0 && $children === 0 && $guests > 0) {
             $conditions[] = 'max_guests >= :guests';
             $params[':guests'] = $guests;
         }
@@ -554,12 +566,14 @@ public function getSuggestedRooms(int $guests, array $excludeIds = [], int $limi
         $rooms = array_map([Room::class, 'fromDB'], $stmt->fetchAll(PDO::FETCH_ASSOC));
 
         // Lọc tiện nghi ở PHP (vì lưu dạng JSON trong DB)
+        // Logic OR: phòng có ÍT NHẤT 1 trong các tiện nghi được chọn là đủ điều kiện
         if (!empty($amenities)) {
             $rooms = array_values(array_filter($rooms, function (Room $room) use ($amenities) {
-                foreach ($amenities as $required) {
-                    if (!in_array($required, $room->getAmenities(), true)) return false;
+                $roomAmenities = $room->getAmenities();
+                foreach ($amenities as $selected) {
+                    if (in_array($selected, $roomAmenities, true)) return true;
                 }
-                return true;
+                return false;
             }));
         }
 
