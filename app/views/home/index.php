@@ -106,7 +106,11 @@
             <h3>Phòng <?= htmlspecialchars($room->getType()) ?></h3>
             <p class="card-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?>đ / đêm</p>
             <div class="card-badges">
-                <span class="badge green">Còn phòng</span>
+                <?php if ($room->isActive()): ?>
+                  <span class="badge green">Còn phòng</span>
+                <?php else: ?>
+                  <span class="badge" style="background:#fee2e2;color:#dc2626;">Bảo trì</span>
+                <?php endif; ?>
             </div>
             <p class="card-guests">Tối đa <?= $room->getMaxGuests() ?> khách</p>
             <div class="card-actions">
