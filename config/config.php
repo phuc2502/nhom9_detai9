@@ -6,7 +6,7 @@
 // ── DATABASE ──────────────────────────────────
 // Mỗi người chỉ cần đổi DB_USER / DB_PASS nếu khác root
 define('DB_HOST', '127.0.0.1');
-define('DB_PORT', '3307');      // port mặc định MySQL — đổi lại 3307 nếu dùng Docker
+define('DB_PORT', '3306');      // port mặc định MySQL — đổi lại 3307 nếu dùng Docker
 define('DB_NAME', 'hotel_booking');
 define('DB_USER', 'root');
 define('DB_PASS', '');
