@@ -498,13 +498,7 @@ in the Software without restriction...
 - Tích hợp **SePay API** để sinh mã **VietQR động** tại màn hình chờ thanh toán
 - Xử lý polling trạng thái thanh toán (AJAX mỗi 5 giây) và Webhook từ SePay
 
-```php
-// Ví dụ: Tính tiền có phụ thu cuối tuần
-if (in_array($dayOfWeek, [5, 6])) {
-    $nightPrice *= 1.20; // +20% thứ 6, thứ 7
-}
-$total += $nightPrice;
-```
+
 
 ---
 
