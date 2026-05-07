@@ -263,6 +263,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <?php if (!empty($preselectedRoom)): ?>
             <input type="hidden" name="room_id" value="<?= $preselectedRoom->getId() ?>">
             <input type="hidden" id="room-max-guests" value="<?= $preselectedRoom->getMaxGuests() ?>">
+            <input type="hidden" id="room-max-adults" value="<?= $preselectedRoom->getMaxAdults() ?>">
+            <input type="hidden" id="room-max-children" value="<?= $preselectedRoom->getMaxChildren() ?>">
             <div style="padding:14px 18px;
                         background:linear-gradient(135deg,#f0fdf9 0%,#e6f7f5 100%);
                         border:1.5px solid #009688; border-radius:10px;
@@ -285,7 +287,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         </span>
                         <span style="background:#e0f7f4; color:#00796b; font-size:.8rem;
                                      padding:2px 8px; border-radius:20px; font-weight:500;">
-                            👥 Tối đa <?= $preselectedRoom->getMaxGuests() ?> khách
+                            👤 <?= $preselectedRoom->getMaxAdults() ?> người lớn &nbsp;
+                            🐣 <?= $preselectedRoom->getMaxChildren() ?> trẻ em
                         </span>
                     </div>
                 </div>
@@ -307,20 +310,24 @@ document.addEventListener('DOMContentLoaded', function() {
             <select name="room_id" id="f-room"
                     onchange="updateRoomMax(this)"
                     style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;">
-                <option value="" data-max="0">-- Chọn loại phòng --</option>
+                <option value="" data-max="0" data-maxadults="0" data-maxchildren="0">-- Chọn loại phòng --</option>
                 <?php foreach ($rooms ?? [] as $room):
                     $sel = (isset($_POST['room_id']) && $_POST['room_id'] == $room->getId()) ? 'selected' : '';
                 ?>
                     <option value="<?= $room->getId() ?>" <?= $sel ?>
-                            data-max="<?= $room->getMaxGuests() ?>">
+                            data-max="<?= $room->getMaxGuests() ?>"
+                            data-maxadults="<?= $room->getMaxAdults() ?>"
+                            data-maxchildren="<?= $room->getMaxChildren() ?>">
                         Phòng <?= htmlspecialchars($room->getRoomNumber()) ?>
                         - <?= htmlspecialchars($room->getType()) ?>
                         (<?= number_format($room->getPricePerNight(), 0, ',', '.') ?>đ/đêm
-                        - tối đa <?= $room->getMaxGuests() ?> khách)
+                        - tối đa <?= $room->getMaxAdults() ?> người lớn, <?= $room->getMaxChildren() ?> trẻ em)
                     </option>
                 <?php endforeach; ?>
             </select>
             <input type="hidden" id="room-max-guests" value="0">
+            <input type="hidden" id="room-max-adults" value="0">
+            <input type="hidden" id="room-max-children" value="0">
         <?php endif; ?>
     </div>
 
@@ -445,9 +452,27 @@ function validateForm() {
         return;
     }
 
+    /* Kiểm tra số người lớn không vượt max_adults */
+    var maxAdults = parseInt(document.getElementById('room-max-adults')?.value) || 0;
+    if (maxAdults > 0 && adults > maxAdults) {
+        showToast('👤', 'Số người lớn vượt giới hạn',
+            'Phòng này chỉ chứa tối đa <strong>' + maxAdults + ' người lớn</strong>.<br>' +
+            'Bạn đang nhập <strong>' + adults + ' người lớn</strong>.');
+        return;
+    }
+
     /* Số trẻ em không được âm */
     if (children < 0) {
         showToast('👶', 'Số trẻ em không hợp lệ', 'Số trẻ em không được nhỏ hơn 0.');
+        return;
+    }
+
+    /* Kiểm tra số trẻ em không vượt max_children */
+    var maxChildren = parseInt(document.getElementById('room-max-children')?.value) || 0;
+    if (children > maxChildren) {
+        showToast('🐣', 'Số trẻ em vượt giới hạn',
+            'Phòng này chỉ chứa tối đa <strong>' + maxChildren + ' trẻ em</strong>.<br>' +
+            'Bạn đang nhập <strong>' + children + ' trẻ em</strong>.');
         return;
     }
 
@@ -572,7 +597,11 @@ document.getElementById('f-phone').addEventListener('blur', function(){
 function updateRoomMax(sel) {
     var opt = sel.options[sel.selectedIndex];
     var max = parseInt(opt.getAttribute('data-max')) || 0;
-    document.getElementById('room-max-guests').value = max;
+    var maxAdults   = parseInt(opt.getAttribute('data-maxadults'))   || 0;
+    var maxChildren = parseInt(opt.getAttribute('data-maxchildren')) || 0;
+    document.getElementById('room-max-guests').value   = max;
+    document.getElementById('room-max-adults').value   = maxAdults;
+    document.getElementById('room-max-children').value = maxChildren;
 }
 document.addEventListener('DOMContentLoaded', function() {
     var sel = document.getElementById('f-room');
