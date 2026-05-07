@@ -190,7 +190,7 @@ $notify = $_GET['notify'] ?? '';
               <span class="rch-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?></span>
               <span class="rch-price-unit">
                 <span>vnd mỗi đêm</span>
-                <span class="rch-vat">Chưa VAT</span>
+                
               </span>
             </div>
             <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book-h">Đặt Ngay</a>
