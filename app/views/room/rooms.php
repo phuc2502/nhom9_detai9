@@ -44,13 +44,15 @@ $notify = $_GET['notify'] ?? '';
       <input type="hidden" name="action" value="rooms">
 
       <div class="filter-block">
-        <h3 class="filter-title">🗓 Ngày &amp; Khách</h3>
+        <h3 class="filter-title">🗓 Ngày &amp; Số Khách</h3>
         <label>Nhận phòng</label>
         <input type="date" name="checkin"  value="<?= htmlspecialchars($filterCheckIn) ?>">
         <label>Trả phòng</label>
         <input type="date" name="checkout" value="<?= htmlspecialchars($filterCheckOut) ?>">
-        <label>Số khách</label>
-        <input type="number" name="guests" min="1" max="20" value="<?= $filterGuests ?: '' ?>" placeholder="Bao nhiêu người?">
+        <label>👨‍👩 Người lớn</label>
+        <input type="number" name="adults" min="0" max="10" value="<?= $filterAdults ?: '' ?>" placeholder="Số người lớn">
+        <label>👶 Trẻ em</label>
+        <input type="number" name="children" min="0" max="10" value="<?= $filterChildren ?: '' ?>" placeholder="Số trẻ em">
       </div>
 
       <div class="filter-block">
@@ -178,7 +180,10 @@ $notify = $_GET['notify'] ?? '';
               <div class="rch-meta-row">
                 <span class="rch-meta-label">SỨC CHỨA</span>
                 <span class="rch-guests">
-                  👥 Tối đa <?= $room->getMaxGuests() ?> khách
+                  👨‍👩 <?= $room->getMaxAdults() ?> người lớn
+                  <?php if ($room->getMaxChildren() > 0): ?>
+                    &nbsp;·&nbsp; 👶 <?= $room->getMaxChildren() ?> trẻ em
+                  <?php endif; ?>
                 </span>
               </div>
             </div>

@@ -83,8 +83,11 @@ case 'rooms':
     $service = new BookingService();
 
     // Tham số ngày & khách
-    $filterGuests = max(0, (int)($_GET['guests'] ?? 0));
-    $totalGuests  = $filterGuests;
+    // Tham số ngày & khách
+    $filterAdults   = max(0, (int)($_GET['adults']   ?? 0));
+    $filterChildren = max(0, (int)($_GET['children'] ?? 0));
+    $filterGuests   = $filterAdults + $filterChildren; // tổng, dùng cho thông báo
+    $totalGuests    = $filterGuests;    
     $filterCheckIn  = trim($_GET['checkin']  ?? '');
     $filterCheckOut = trim($_GET['checkout'] ?? '');
 
@@ -128,16 +131,18 @@ case 'rooms':
     if ($searchError === null) {
         try {
             $allRooms = $service->filterRooms(
-                $filterPriceMin, $filterPriceMax,
-                $filterType, $filterAmenities, $filterSortBy,
-                $checkInDate, $checkOutDate, $totalGuests
+            $filterPriceMin, $filterPriceMax,
+            $filterType, $filterAmenities, $filterSortBy,
+            $checkInDate, $checkOutDate, $totalGuests,
+            $filterAdults, $filterChildren
             );
 
             // Tạo thông báo kết quả
             $parts = [];
             if ($checkInDate && $checkOutDate)
                 $parts[] = 'từ ' . $checkInDate->format('d/m/Y') . ' đến ' . $checkOutDate->format('d/m/Y');
-            if ($filterGuests > 0)  $parts[] = "cho {$filterGuests} khách";
+            if ($filterAdults > 0)   $parts[] = "{$filterAdults} Người lớn";
+            if ($filterChildren > 0) $parts[] = "{$filterChildren} Trẻ em";
             if ($filterType !== '') $parts[] = "loại \"{$filterType}\"";
             if ($filterPriceMin > 0 || $filterPriceMax > 0) {
                 $mn = $filterPriceMin > 0 ? number_format($filterPriceMin,0,',','.') . 'đ' : '0';
@@ -187,7 +192,8 @@ case 'rooms':
         'action'    => 'rooms',
         'checkin'   => $filterCheckIn,
         'checkout'  => $filterCheckOut,
-        'guests'    => $filterGuests  ?: null,
+        'adults'    => $filterAdults   ?: null,
+        'children'  => $filterChildren ?: null,
         'price_min' => $filterPriceMin ?: null,
         'price_max' => $filterPriceMax ?: null,
         'room_type' => $filterType,
