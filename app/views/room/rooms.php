@@ -49,8 +49,10 @@ $notify = $_GET['notify'] ?? '';
         <input type="date" name="checkin"  value="<?= htmlspecialchars($filterCheckIn) ?>">
         <label>Trả phòng</label>
         <input type="date" name="checkout" value="<?= htmlspecialchars($filterCheckOut) ?>">
-        <label>Số khách</label>
-        <input type="number" name="guests" min="1" max="20" value="<?= $filterGuests ?: '' ?>" placeholder="Bao nhiêu người?">
+        <label>Người lớn</label>
+        <input type="number" name="adults"   min="0" max="10" value="<?= $filterAdults ?>">
+        <label>Trẻ em</label>
+        <input type="number" name="children" min="0" max="10" value="<?= $filterChildren ?>">
       </div>
 
       <div class="filter-block">
@@ -176,9 +178,10 @@ $notify = $_GET['notify'] ?? '';
               </div>
               <?php endif; ?>
               <div class="rch-meta-row">
-                <span class="rch-meta-label">SỨC CHỨA</span>
+                <span class="rch-meta-label">KHÁCH HÀNG</span>
                 <span class="rch-guests">
-                  👥 Tối đa <?= $room->getMaxGuests() ?> khách
+                  👤 <?= $room->getMaxGuests() ?> Người Lớn &nbsp;
+                  🐣 0 Trẻ Em
                 </span>
               </div>
             </div>
@@ -190,7 +193,7 @@ $notify = $_GET['notify'] ?? '';
               <span class="rch-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?></span>
               <span class="rch-price-unit">
                 <span>vnd mỗi đêm</span>
-                
+                <span class="rch-vat">Chưa VAT</span>
               </span>
             </div>
             <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book-h">Đặt Ngay</a>

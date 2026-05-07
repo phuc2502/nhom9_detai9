@@ -33,7 +33,6 @@
         </div>
 
         <div class="calendar-popup" id="calendar-popup">
-            <!-- FIX 3: Nút điều hướng tháng prev/next -->
             <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 12px 2px;">
                 <button onclick="prevMonth()" title="Tháng trước"
                         style="background:none; border:none; font-size:1.3rem; cursor:pointer;
@@ -80,36 +79,38 @@
         </div>
     </div>
 
-    
 </section>
 
-    <!-- SECTION PHÒNG -->
+    <!-- SECTION PHÒNG ĐỀ XUẤT - Lấy từ database -->
     <section class="section-rooms">
         <div class="container">
             <div class="section-header">
                 <h2>Phòng đề xuất</h2>
-
             </div>
 
             <div class="rooms-grid-wrap">
                 <div class="rooms-grid">
 
-<?php foreach ($rooms as $index => $room): ?>
-<?php if ($index >= 3) continue; ?>
-<div class="room-card">
+<?php
+// Lấy tối đa 3 phòng active từ danh sách đã truy vấn DB
+$featuredRooms = array_slice($rooms, 0, 3);
+?>
 
+<?php if (!empty($featuredRooms)): ?>
+    <?php foreach ($featuredRooms as $room): ?>
+    <div class="room-card">
         <div class="card-img">
             <img src="<?= getRoomImageUrl($room->getType(), 400, 200) ?>"
-            alt="<?= htmlspecialchars($room->getType()) ?>">
+                 alt="<?= htmlspecialchars($room->getType()) ?>">
         </div>
         <div class="card-body">
             <h3>Phòng <?= htmlspecialchars($room->getType()) ?></h3>
             <p class="card-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?>đ / đêm</p>
             <div class="card-badges">
                 <?php if ($room->isActive()): ?>
-                  <span class="badge green">Còn phòng</span>
+                    <span class="badge green">Còn phòng</span>
                 <?php else: ?>
-                  <span class="badge" style="background:#fee2e2;color:#dc2626;">Bảo trì</span>
+                    <span class="badge" style="background:#fee2e2;color:#dc2626;">Bảo trì</span>
                 <?php endif; ?>
             </div>
             <p class="card-guests">Tối đa <?= $room->getMaxGuests() ?> khách</p>
@@ -120,10 +121,16 @@
         </div>
     </div>
     <?php endforeach; ?>
-</div>
+<?php else: ?>
+    <div style="grid-column:1/-1; text-align:center; padding:40px; color:#888;">
+        <p>Hiện chưa có phòng nào. Vui lòng quay lại sau.</p>
+    </div>
+<?php endif; ?>
+
+                </div>
             </div>
 
-           <div class="center-btn">
+            <div class="center-btn">
                 <a href="?action=rooms" class="btn-more">Xem thêm</a>
             </div>
         </div>
@@ -133,28 +140,28 @@
     <section class="section-amenities">
         <div class="container">
             <h2>Tiện nghi nổi bật</h2>
-            <div class="amenities-grid">
-                <div class="amenity-item">
-                    <div class="amenity-icon">🏊</div>
-                    <p>Bể bơi ngoài trời</p>
-                </div>
-                <div class="amenity-item">
-                    <div class="amenity-icon">🍽️</div>
-                    <p>Nhà hàng sang trọng</p>
-                </div>
-                <div class="amenity-item">
-                    <div class="amenity-icon">💪</div>
-                    <p>Phòng gym hiện đại</p>
-                </div>
-                <div class="amenity-item">
-                    <div class="amenity-icon">🛏️</div>
-                    <p>Phòng nghỉ tiện nghi</p>
-                </div>
-                <div class="amenity-item">
-                    <div class="amenity-icon">🚗</div>
-                    <p>Dịch vụ đưa đón</p>
-                </div>
-            </div>
+<div class="amenities-grid">
+    <div class="amenity-item">
+        <div class="amenity-icon">🏊</div>
+        <p>Bể bơi ngoài trời</p>
+    </div>
+    <div class="amenity-item">
+        <div class="amenity-icon">🍹</div>
+        <p>Minibar</p>
+    </div>
+    <div class="amenity-item">
+        <div class="amenity-icon">🛎️</div>
+        <p>Butler 24/7</p>
+    </div>
+    <div class="amenity-item">
+        <div class="amenity-icon">🌊</div>
+        <p>Ban công / View biển</p>
+    </div>
+    <div class="amenity-item">
+        <div class="amenity-icon">🛋️</div>
+        <p>Phòng khách riêng</p>
+    </div>
+</div>
         </div>
     </section>
 
@@ -214,7 +221,7 @@ function toggleGuests() {
     guestBox.classList.toggle('open');
 }
 
-// Đóng popup khi click ngoài — thêm stopPropagation cho các nút counter
+// Đóng popup khi click ngoài
 document.addEventListener('click', function(e) {
     const cal   = document.getElementById('calendar-popup');
     const guest = document.getElementById('guest-box');
@@ -222,7 +229,6 @@ document.addEventListener('click', function(e) {
     if (!e.target.closest('#date-field') && !e.target.closest('#calendar-popup'))
         cal.classList.remove('open');
 
-    // Chỉ đóng guest-box khi click ngoài cả guest-field lẫn guest-box
     if (!e.target.closest('#guest-field') && !e.target.closest('#guest-box'))
         guest.classList.remove('open');
 });
@@ -232,12 +238,10 @@ let calMonth = new Date().getMonth(); // 0-indexed
 
 function renderCalendars() {
     renderMonth('cal-left',  calYear, calMonth);
-    // Tháng phải (luôn = tháng trái + 1, xử lý qua năm)
     let ny = calMonth === 11 ? calYear + 1 : calYear;
     let nm = calMonth === 11 ? 0 : calMonth + 1;
     renderMonth('cal-right', ny, nm);
 
-    // FIX 3: Cập nhật nhãn điều hướng, VD: "Tháng 4 2026 — Tháng 5 2026"
     var monthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
                       'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
     var lbl = document.getElementById('cal-nav-label');
@@ -245,14 +249,12 @@ function renderCalendars() {
                              + ' — ' + monthNames[nm] + ' ' + ny;
 }
 
-// FIX 3: Điều hướng tháng trước — calMonth-- (xử lý qua năm)
 function prevMonth() {
     if (calMonth === 0) { calMonth = 11; calYear--; }
     else { calMonth--; }
     renderCalendars();
 }
 
-// FIX 3: Điều hướng tháng sau — calMonth++ (xử lý qua năm)
 function nextMonth() {
     if (calMonth === 11) { calMonth = 0; calYear++; }
     else { calMonth++; }
@@ -314,10 +316,8 @@ function clearDates() {
 }
 
 function dateStr(d) {
-    // KHÔNG dùng toISOString() vì nó convert sang UTC → lệch múi giờ (VN UTC+7)
-    // Dùng getFullYear/getMonth/getDate lấy giờ địa phương → đúng ngày user chọn
     var yyyy = d.getFullYear();
-    var mm   = String(d.getMonth() + 1).padStart(2, '0'); // tháng 0-indexed → +1
+    var mm   = String(d.getMonth() + 1).padStart(2, '0');
     var dd   = String(d.getDate()).padStart(2, '0');
     return yyyy + '-' + mm + '-' + dd;
 }
