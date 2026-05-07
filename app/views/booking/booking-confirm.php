@@ -43,7 +43,7 @@ $depositAmt  = number_format($booking->getTotalPrice() * 0.3, 0, ',', '.');
                 ['Số đêm',      $booking->getNights() . ' đêm'],
                 ['Số khách',    $booking->getGuests() . ' người'],
                 ['Tổng tiền',   $amountFmt . 'đ'],
-                ['Thanh toán',  'Tại quầy (đặt cọc 30%)'],
+                ['Thanh toán',  'Tại quầy'],
             ];
             foreach ($rows as [$label, $val]):
             ?>
@@ -54,38 +54,7 @@ $depositAmt  = number_format($booking->getTotalPrice() * 0.3, 0, ',', '.');
             </div>
             <?php endforeach; ?>
         </div>
-    </div>
-
-    <!-- Hướng dẫn đặt cọc -->
-    <div class="room-card" style="margin-bottom:20px; border-left:4px solid #e65100;">
-        <div class="card-body">
-            <div class="info-title" style="color:#e65100; margin-bottom:12px;">
-                💡 Yêu Cầu Đặt Cọc
-            </div>
-            <p style="font-size:14px; color:#555; margin-bottom:10px;">
-                Để giữ chỗ, bạn cần chuyển khoản tiền cọc
-                <strong style="color:#e65100; font-size:16px;"><?= $depositAmt ?>đ</strong>
-                (30% tổng tiền) trong vòng <strong>24 giờ</strong>.
-            </p>
-            <div style="background:#fff3e0; border-radius:8px; padding:12px 14px; font-size:13px; color:#5d4037;">
-                📧 Thông tin tài khoản nhận tiền cọc đã được gửi qua email của bạn.<br>
-                ⚠️ Nếu không nhận được tiền cọc sau 24 giờ, đặt phòng sẽ tự động hủy.
-            </div>
-        </div>
-    </div>
-
-    <!-- Chính sách hủy -->
-    <div class="room-card" style="margin-bottom:24px;">
-        <div class="card-body">
-            <div class="info-title" style="margin-bottom:12px;">📋 Chính Sách Hủy Phòng</div>
-            <div style="font-size:13px; color:#555; line-height:2;">
-                ✅ Hủy trước <strong>3 ngày</strong> check-in: hoàn <strong>100%</strong> tiền cọc<br>
-                ⚠️ Hủy trước <strong>1–2 ngày</strong>: hoàn <strong>50%</strong> tiền cọc<br>
-                ❌ Hủy ngày check-in hoặc không đến: <strong>mất toàn bộ</strong> tiền cọc<br>
-                📞 Liên hệ lễ tân hoặc gọi hotline để yêu cầu hủy phòng.
-            </div>
-        </div>
-    </div>
+    </div>   
 
     <!-- Nút hành động -->
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
