@@ -456,10 +456,9 @@ in the Software without restriction...
 ### 🎨 Duyên — Logic Tìm kiếm & Giao diện Core
 
 **Phụ trách:**
-- Thiết kế HTML/CSS/JS cho: Trang chủ, Form tìm kiếm, Danh sách phòng, Chi tiết phòng
+- Thiết kế HTML/CSS/JS cho: Trang chủ, Form tìm kiếm, Danh sách phòng, Chi tiết phòng, Trang Tiện nghi, Trang Giới thiệu
 - **PHP Logic:** 100% hệ thống **Tìm kiếm & Kiểm tra phòng trống**
   - Xử lý tham số Form (GET/POST), validate ngày check-in/check-out bằng Regex
-  - Thuật toán lọc dữ liệu, hiển thị **"Hết phòng"** hoặc **"Gợi ý phòng tương tự"**
   - Gọi method của Thu Lan để bóc tách mảng kết quả
 
 
