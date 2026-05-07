@@ -52,7 +52,6 @@ $desc      = $descMap[$type] ?? 'Phòng tiện nghi với đầy đủ các dị
 
                 <!-- Ảnh phòng -->
                 <div class="room-detail-img">
-                    <?php require_once ROOT_PATH . '/app/views/data.php'; ?>
                 <img src="<?= getRoomImageUrl($type, 800, 500) ?>"
                  alt="Phòng <?= htmlspecialchars($type) ?>"
                  style="width:100%; border-radius:12px; object-fit:cover; max-height:420px;">

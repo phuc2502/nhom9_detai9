@@ -6,7 +6,7 @@ $amountFmt   = number_format($booking->getTotalPrice(), 0, ',', '.');
 ?>
 
 <main>
-<section class="section-rooms" style="padding:40px 0;">
+<section class="section-rooms" style="padding:100px 0 40px;">
 <div class="container">
 
     <div class="section-header" style="margin-bottom:32px;">
@@ -162,10 +162,22 @@ $amountFmt   = number_format($booking->getTotalPrice(), 0, ',', '.');
                 </div>
             </div>
 
-            <!-- Nút -->
-            <div style="display:flex; gap:12px;">
-                <a href="?action=rooms" class="btn-detail" style="flex:1; text-align:center;">🛏️ Đặt phòng khác</a>
-                <a href="?action=home"    class="btn-book"   style="flex:1; text-align:center;">🏠 Trang chủ</a>
+            <!-- Nút điều hướng -->
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <a href="?action=rooms" class="btn-detail" style="flex:1; text-align:center; min-width:120px;">🛏️ Đặt phòng khác</a>
+                <a href="?action=home"  class="btn-book"   style="flex:1; text-align:center; min-width:120px;">🏠 Trang chủ</a>
+            </div>
+
+            <!-- Nút hủy đặt phòng -->
+            <div style="margin-top:8px;">
+                <button onclick="openCancelModal()"
+                        style="width:100%; padding:12px; background:#fff; border:2px solid #ef5350;
+                               color:#ef5350; border-radius:8px; font-size:14px; font-weight:600;
+                               cursor:pointer; transition:all .2s;"
+                        onmouseover="this.style.background='#ef5350';this.style.color='#fff';"
+                        onmouseout="this.style.background='#fff';this.style.color='#ef5350';">
+                    ❌ Hủy đặt phòng
+                </button>
             </div>
 
         </div>
@@ -175,39 +187,90 @@ $amountFmt   = number_format($booking->getTotalPrice(), 0, ',', '.');
 </section>
 </main>
 
+<!-- ══════════════ POPUP HỦY ══════════════ -->
+<div id="modal-cancel" style="display:none; position:fixed; inset:0; z-index:9000;
+     background:rgba(0,0,0,.5); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:16px; padding:32px 28px; max-width:380px;
+                width:90%; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,.25);">
+        <div style="font-size:50px; margin-bottom:12px;">🗑️</div>
+        <h3 style="margin:0 0 8px; font-size:20px; color:#1a1a1a;">Hủy đặt phòng?</h3>
+        <p style="color:#666; font-size:14px; margin:0 0 24px; line-height:1.6;">
+            Bạn có chắc muốn hủy không?<br>
+            Phòng sẽ <strong>trở về trạng thái trống</strong> ngay lập tức.
+        </p>
+        <div style="display:flex; gap:12px;">
+            <button onclick="closeCancelModal()"
+                    style="flex:1; padding:12px; background:#f0f0f0; border:none; border-radius:10px;
+                           font-size:15px; font-weight:600; cursor:pointer; color:#555;">
+                Không, giữ lại
+            </button>
+            <button id="btn-do-cancel" onclick="doCancel()"
+                    style="flex:1; padding:12px; background:#ef5350; border:none; border-radius:10px;
+                           font-size:15px; font-weight:600; cursor:pointer; color:#fff;">
+                Có, hủy ngay
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════ POPUP HẾT HẠN ══════════════ -->
+<div id="modal-expired" style="display:none; position:fixed; inset:0; z-index:9000;
+     background:rgba(0,0,0,.5); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:16px; padding:32px 28px; max-width:380px;
+                width:90%; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,.25);">
+        <div style="font-size:50px; margin-bottom:12px;">⏰</div>
+        <h3 style="margin:0 0 8px; font-size:20px; color:#1a1a1a;">Hết thời gian chờ</h3>
+        <p style="color:#666; font-size:14px; margin:0 0 24px; line-height:1.6;">
+            Thời gian giữ phòng 15 phút đã hết.<br>
+            Phòng đã được <strong>trả về trạng thái trống</strong>.
+        </p>
+        <a href="<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/?action=rooms"
+           style="display:block; padding:13px; background:#009688; border-radius:10px;
+                  font-size:15px; font-weight:600; color:#fff; text-decoration:none;">
+            🛏️ Chọn phòng khác
+        </a>
+    </div>
+</div>
+
 <style>
-@keyframes blink {
-    0%,100% { opacity:1; }
-    50%      { opacity:.2; }
-}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
 </style>
 
 <script>
-const BOOKING_ID  = <?= (int)$booking->getId() ?>;
-const BASE_URL    = '<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/?';
+const BOOKING_ID = <?= (int)$booking->getId() ?>;
+const BASE_URL   = '<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/?';
 
-// ── 1. ĐẾM NGƯỢC 15 PHÚT ──
-(function(){
-    let secs = 15 * 60;
+// ══════════════════════════════════════════════
+// 1. ĐẾM NGƯỢC 15 PHÚT — dùng sessionStorage
+//    để đồng hồ không reset khi bấm back/reload
+// ══════════════════════════════════════════════
+(function () {
+    const KEY = 'qr_expire_' + BOOKING_ID;
+    let expireAt = parseInt(sessionStorage.getItem(KEY) || '0', 10);
+    const now = Date.now();
+
+    if (!expireAt || expireAt <= now) {
+        expireAt = now + 15 * 60 * 1000;
+        sessionStorage.setItem(KEY, expireAt);
+    }
+
     const el = document.getElementById('timer');
     const id = setInterval(() => {
-        secs--;
-        if (secs <= 0) {
-            clearInterval(id);
-            el.closest('#badge-pending').innerHTML =
-                '⚠️ QR hết hạn — <a href="javascript:location.reload()" style="color:#e65100;">Tải lại</a>';
-            return;
-        }
-        const m = String(Math.floor(secs/60)).padStart(2,'0');
-        const s = String(secs%60).padStart(2,'0');
-        el.textContent = m+':'+s;
-    }, 1000);
+        const left = Math.max(0, Math.floor((expireAt - Date.now()) / 1000));
+        if (left === 0) { clearInterval(id); return; }
+        el.textContent =
+            String(Math.floor(left / 60)).padStart(2, '0') + ':' +
+            String(left % 60).padStart(2, '0');
+    }, 500);
 })();
 
-// ── 2. POLLING MỖI 5 GIÂY ──
-(function(){
+// ══════════════════════════════════════════════
+// 2. POLLING MỖI 5 GIÂY — kiểm tra thanh toán
+//    và phát hiện hết hạn từ server
+// ══════════════════════════════════════════════
+(function () {
     let tries = 0;
-    const MAX = 180; // 15 phút
+    const MAX = 180;
 
     const poll = setInterval(() => {
         if (++tries > MAX) { clearInterval(poll); return; }
@@ -217,27 +280,90 @@ const BASE_URL    = '<?= rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') ?>/?';
             .then(data => {
                 if (data.confirmed) {
                     clearInterval(poll);
-                    onPaymentSuccess(data.redirectUrl);
+                    sessionStorage.removeItem('qr_expire_' + BOOKING_ID);
+                    // Hiện overlay thành công
+                    document.getElementById('badge-pending').style.display = 'none';
+                    document.getElementById('qr-success-overlay').style.display = 'flex';
+                    setTimeout(() => {
+                        window.location.href = data.redirectUrl ||
+                            (BASE_URL + 'action=payment/success&booking_id=' + BOOKING_ID);
+                    }, 1500);
+                } else if (data.expired) {
+                    clearInterval(poll);
+                    sessionStorage.removeItem('qr_expire_' + BOOKING_ID);
+                    showModal('modal-expired');
                 }
             })
-            .catch(() => {}); // Bỏ qua lỗi mạng tạm thời
+            .catch(() => {});
     }, 5000);
 })();
 
-// ── 3. KHI THANH TOÁN THÀNH CÔNG ──
-function onPaymentSuccess(redirectUrl) {
-    // Ẩn badge "đang chờ", hiện overlay xanh lên QR
-    document.getElementById('badge-pending').style.display = 'none';
-    const overlay = document.getElementById('qr-success-overlay');
-    overlay.style.display = 'flex';
+// ══════════════════════════════════════════════
+// 3. KHI NGƯỜI DÙNG RỜI TRANG (đóng tab / bấm link khác)
+//    → cancel booking ngay, dùng sendBeacon để đáng tin cậy
+// ══════════════════════════════════════════════
+let _leaving = false;
 
-    // Chuyển hướng sau 1.5s
-    setTimeout(() => {
-        window.location.href = redirectUrl || (BASE_URL + 'action=payment/success&booking_id=' + BOOKING_ID);
-    }, 1500);
+window.addEventListener('pagehide', () => {
+    if (_leaving) return;
+    // Chỉ cancel nếu chưa thanh toán xong
+    if (!document.getElementById('qr-success-overlay') ||
+        document.getElementById('qr-success-overlay').style.display === 'none') {
+        navigator.sendBeacon(
+            BASE_URL + 'action=payment/leave&booking_id=' + BOOKING_ID
+        );
+    }
+});
+
+// ══════════════════════════════════════════════
+// 4. POPUP HỦY
+// ══════════════════════════════════════════════
+function openCancelModal()  { showModal('modal-cancel'); }
+function closeCancelModal() { hideModal('modal-cancel'); }
+
+function doCancel() {
+    const btn = document.getElementById('btn-do-cancel');
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang hủy...';
+
+    fetch(BASE_URL + 'action=payment/cancel&booking_id=' + BOOKING_ID, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                _leaving = true; // Ngăn pagehide gọi beacon thêm lần nữa
+                sessionStorage.removeItem('qr_expire_' + BOOKING_ID);
+                window.location.href = BASE_URL + 'action=rooms&notify=cancelled';
+            } else {
+                alert('❌ ' + (data.error || 'Không thể hủy'));
+                btn.disabled = false;
+                btn.textContent = 'Có, hủy ngay';
+                closeCancelModal();
+            }
+        })
+        .catch(() => {
+            alert('❌ Lỗi kết nối, vui lòng thử lại.');
+            btn.disabled = false;
+            btn.textContent = 'Có, hủy ngay';
+            closeCancelModal();
+        });
 }
 
-// ── 4. SAO CHÉP ──
+// ══════════════════════════════════════════════
+// 5. HELPERS
+// ══════════════════════════════════════════════
+function showModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
+function hideModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+// Đóng modal khi click vùng nền mờ
+['modal-cancel', 'modal-expired'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function (e) {
+        if (e.target === this) hideModal(id);
+    });
+});
+
 function copyText(text, el) {
     navigator.clipboard.writeText(text).then(() => {
         const orig = el.innerHTML;
