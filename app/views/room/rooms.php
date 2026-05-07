@@ -180,8 +180,8 @@ $notify = $_GET['notify'] ?? '';
               <div class="rch-meta-row">
                 <span class="rch-meta-label">KHÁCH HÀNG</span>
                 <span class="rch-guests">
-                  👤 <?= $room->getMaxGuests() ?> Người Lớn &nbsp;
-                  🐣 0 Trẻ Em
+                  👤 <?= $room->getMaxAdults() ?> Người Lớn &nbsp;
+                  🐣 <?= $room->getMaxChildren() ?> Trẻ Em
                 </span>
               </div>
             </div>
@@ -193,7 +193,6 @@ $notify = $_GET['notify'] ?? '';
               <span class="rch-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?></span>
               <span class="rch-price-unit">
                 <span>vnd mỗi đêm</span>
-                <span class="rch-vat">Chưa VAT</span>
               </span>
             </div>
             <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book-h">Đặt Ngay</a>

@@ -81,8 +81,9 @@ $desc      = $descMap[$type] ?? 'Phòng tiện nghi với đầy đủ các dị
                     <!-- Sức chứa -->
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px;
                                 padding:10px 14px; background:#f0fdf9; border-radius:8px; border:1px solid #b2dfdb;">
-                        <span style="font-size:1.2rem;">👥</span>
-                        <span>Tối đa <strong><?= $room->getMaxGuests() ?> khách</strong></span>
+                        <span style="font-size:1.2rem;">👤</span>
+                        <span>Tối đa <strong><?= $room->getMaxAdults() ?> người lớn</strong> &nbsp;
+                        🐣 <strong><?= $room->getMaxChildren() ?> trẻ em</strong></span>
                     </div>
 
                     <!-- Mô tả -->
