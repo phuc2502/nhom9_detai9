@@ -11,6 +11,8 @@ CREATE TABLE rooms (
     type             VARCHAR(50)    NOT NULL,
     price_per_night  DECIMAL(10,2)  NOT NULL,
     max_guests       INT            NOT NULL,
+    max_adults       INT            NOT NULL DEFAULT 2,
+    max_children     INT            NOT NULL DEFAULT 0,
     amenities        TEXT,
     is_active        TINYINT(1)     NOT NULL DEFAULT 1 
 );
@@ -34,26 +36,27 @@ CREATE TABLE bookings (
 );
 
 -- =============================================
--- Dữ liệu mẫu (THÊM amenities)
+-- Dữ liệu mẫu (THÊM amenities + max_adults + max_children)
+-- max_adults: số người lớn tối đa, max_children: số trẻ em tối đa
 -- =============================================
-INSERT INTO rooms (room_number, type, price_per_night, max_guests, amenities, is_active) VALUES
-('101', 'Standard',           500000,  2, '["Wi-Fi","Máy lạnh","TV"]', 1),
-('102', 'Standard Twin',      550000,  2, '["Wi-Fi","Máy lạnh","2 giường"]', 1),
-('201', 'Deluxe',             800000,  3, '["Wi-Fi","Mini bar","Ban công"]', 1),
-('202', 'Deluxe Sea View',    950000,  3, '["Wi-Fi","Ban công","View biển"]', 1),
-('203', 'Deluxe',             800000,  3, '["Wi-Fi","Mini bar"]', 0),
-('301', 'Suite',             1500000,  4, '["Wi-Fi","Bồn tắm","Phòng khách"]', 1),
-('302', 'Suite Family',      1600000,  5, '["Wi-Fi","Bồn tắm","Gia đình"]', 1),
-('401', 'Presidential Suite',3000000,  6, '["Wi-Fi","Jacuzzi","Butler"]', 1),
-('103', 'Economy',            400000,  2, '["Wi-Fi","TV"]', 1),
-('104', 'Economy Twin',       420000,  2, '["Wi-Fi","2 giường"]', 1),
-('501', 'Business',          1200000,  3, '["Wi-Fi","Bàn làm việc"]', 1),
-('502', 'Business Deluxe',   1300000,  3, '["Wi-Fi","Mini bar"]', 1),
-('601', 'Luxury',            2000000,  4, '["Wi-Fi","Sàn gỗ","Ban công"]', 1),
-('602', 'Luxury Sea View',   2200000,  4, '["Wi-Fi","View biển"]', 1),
-('701', 'Penthouse',         5000000,  6, '["Wi-Fi","Hồ bơi","Sân thượng"]', 1),
-('105', 'Single Room',        350000,  1, '["Wi-Fi"]', 1),
-('106', 'Double Room',        600000,  2, '["Wi-Fi","Bàn trang điểm"]', 1),
-('107', 'Triple Room',        700000,  3, '["Wi-Fi","3 giường"]', 1),
-('108', 'Quad Room',          900000,  4, '["Wi-Fi","4 giường"]', 1),
-('303', 'Family Room',       1100000,  5, '["Wi-Fi","Gia đình"]', 1);
+INSERT INTO rooms (room_number, type, price_per_night, max_guests, max_adults, max_children, amenities, is_active) VALUES
+('101', 'Standard',           500000,  2, 2, 0, '["Wi-Fi","Máy lạnh","TV"]', 1),
+('102', 'Standard Twin',      550000,  2, 2, 1, '["Wi-Fi","Máy lạnh","2 giường"]', 1),
+('201', 'Deluxe',             800000,  3, 2, 1, '["Wi-Fi","Mini bar","Ban công"]', 1),
+('202', 'Deluxe Sea View',    950000,  3, 2, 1, '["Wi-Fi","Ban công","View biển"]', 1),
+('203', 'Deluxe',             800000,  3, 2, 1, '["Wi-Fi","Mini bar"]', 0),
+('301', 'Suite',             1500000,  4, 3, 2, '["Wi-Fi","Bồn tắm","Phòng khách"]', 1),
+('302', 'Suite Family',      1600000,  5, 3, 3, '["Wi-Fi","Bồn tắm","Gia đình"]', 1),
+('401', 'Presidential Suite',3000000,  6, 4, 3, '["Wi-Fi","Jacuzzi","Butler"]', 1),
+('103', 'Economy',            400000,  2, 2, 0, '["Wi-Fi","TV"]', 1),
+('104', 'Economy Twin',       420000,  2, 2, 1, '["Wi-Fi","2 giường"]', 1),
+('501', 'Business',          1200000,  3, 3, 0, '["Wi-Fi","Bàn làm việc"]', 1),
+('502', 'Business Deluxe',   1300000,  3, 3, 1, '["Wi-Fi","Mini bar"]', 1),
+('601', 'Luxury',            2000000,  4, 3, 2, '["Wi-Fi","Sàn gỗ","Ban công"]', 1),
+('602', 'Luxury Sea View',   2200000,  4, 3, 2, '["Wi-Fi","View biển"]', 1),
+('701', 'Penthouse',         5000000,  6, 4, 4, '["Wi-Fi","Hồ bơi","Sân thượng"]', 1),
+('105', 'Single Room',        350000,  1, 1, 0, '["Wi-Fi"]', 1),
+('106', 'Double Room',        600000,  2, 2, 1, '["Wi-Fi","Bàn trang điểm"]', 1),
+('107', 'Triple Room',        700000,  3, 2, 2, '["Wi-Fi","3 giường"]', 1),
+('108', 'Quad Room',          900000,  4, 3, 2, '["Wi-Fi","4 giường"]', 1),
+('303', 'Family Room',       1100000,  5, 3, 3, '["Wi-Fi","Gia đình"]', 1);
