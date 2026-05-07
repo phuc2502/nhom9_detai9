@@ -193,8 +193,12 @@ case 'contact':
 
         if ($name !== '' && $email !== '' && $message !== '') {
             try {
-                MailService::sendContactForm($name, $email, $message);
-                $contactSuccess = true;
+                $mailResult = MailService::sendContactForm($name, $email, $message);
+                if ($mailResult['admin']) {
+                    $contactSuccess = true;
+                } else {
+                    $contactError = 'Không thể gửi liên hệ lúc này. Vui lòng thử lại sau.';
+                }
             } catch (\Throwable $e) {
                 $contactError = 'Không thể gửi liên hệ lúc này. Vui lòng thử lại sau.';
             }

@@ -70,15 +70,15 @@ class BookingService
             );
         }
 
-        // Điều kiện 2: check-out phải sau check-in
-        // diff()->days: số ngày chênh lệch (luôn dương vì diff() tính tuyệt đối)
-        // ✅ Đúng — so sánh trực tiếp 2 object DateTime
-    // ✅ Thay bằng — so sánh trực tiếp, cho phép checkout cùng ngày (1 ngày)
-    if ($checkOut < $checkIn) {
-    throw new InvalidDateException(
-    "Ngày check-out ({$checkOut->format('d/m/Y')}) không thể trước ngày check-in ({$checkIn->format('d/m/Y')})"
-    );
-    }
+        // Điều kiện 2: check-out phải SAU check-in ít nhất 1 đêm
+        // Dùng <= thay vì < để chặn cả trường hợp checkout cùng ngày checkin
+        // (checkout == checkin → 0 đêm → tổng tiền = 0đ, không hợp lệ)
+        if ($checkOut <= $checkIn) {
+            throw new InvalidDateException(
+                "Ngày trả phòng ({$checkOut->format('d/m/Y')}) phải sau ngày nhận phòng " .
+                "({$checkIn->format('d/m/Y')}) ít nhất 1 đêm."
+            );
+        }
 
     
 
@@ -114,6 +114,22 @@ class BookingService
     }
 
     /**
+     * Tự động hủy tất cả booking PENDING đã quá 15 phút.
+     * Gọi mỗi khi kiểm tra phòng trống để phòng được giải phóng đúng lúc.
+     */
+    public function cancelExpiredPendingBookings(): int
+    {
+        $stmt = $this->db->prepare("
+            UPDATE bookings
+               SET status = 'cancelled'
+             WHERE status = 'pending'
+               AND created_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+        ");
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
+    /**
      * Kiểm tra phòng có bị đặt trùng lịch không (QUAN TRỌNG NHẤT).
      *
      * Logic overlap detection:
@@ -127,6 +143,9 @@ class BookingService
      */
     public function checkDateConflict(Room $room, DateTime $checkIn, DateTime $checkOut): void
     {
+        // Trước khi check, tự động hủy pending đã quá 15 phút → giải phóng phòng đúng lúc
+        $this->cancelExpiredPendingBookings();
+
         // SQL: tìm booking nào của cùng phòng này mà chưa bị hủy và trùng ngày
         $sql = "
             SELECT id, check_in, check_out

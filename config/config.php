@@ -25,7 +25,7 @@ define('ACCOUNT_NAME', 'NGUYEN THI KIEU NGAN');
 define('MAIL_HOST', 'smtp.gmail.com');   // Server SMTP của Gmail
 define('MAIL_PORT', 587);                // Cổng TLS (bảo mật)
 define('MAIL_USERNAME', 'phuct7708@gmail.com');          // Email đăng nhập SMTP
-define('MAIL_PASSWORD', 'gqpj jhor beem cawq');          // ← ĐỔI: App Password Gmail
+define('MAIL_PASSWORD', 'fwui xhmr svap masg');          // ← ĐỔI: App Password Gmail
 define('MAIL_FROM_NAME', 'LuxStay Hotel');                // Tên hiển thị trong inbox
 define('MAIL_FROM_EMAIL', 'phuct7708@gmail.com');          // Email người gửi
 define('MAIL_ADMIN', 'thiephuc.ba@gmail.com');        // Email admin nhận liên hệ
