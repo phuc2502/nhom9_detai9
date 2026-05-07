@@ -88,8 +88,140 @@
                 <h2>Phòng đề xuất</h2>
             </div>
 
-            <div class="rooms-grid-wrap">
-                <div class="rooms-grid">
+<style>
+/* ---- Card nằm ngang cho trang chủ ---- */
+.rooms-list-wrap-home {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.rooms-list-wrap-home .room-card-h {
+  flex-direction: column;
+  min-height: unset;
+}
+.rooms-list-wrap-home .rch-img-wrap {
+  width: 100%;
+  height: 200px;
+}
+.rooms-list-wrap-home .rch-price-col {
+  width: 100%;
+  border-left: none;
+  border-top: 1px solid #f0f0f0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+}
+.rooms-list-wrap-home .rch-price-wrap {
+  flex: 1;
+  text-align: left;
+}
+.rooms-list-wrap-home .rch-price { font-size: 1.2rem; }
+.rooms-list-wrap-home .btn-book-h,
+.rooms-list-wrap-home .btn-detail-h {
+  flex: 1;
+  min-width: 90px;
+  padding: 9px 0;
+  font-size: .85rem;
+}
+@media (max-width: 900px) {
+  .rooms-list-wrap-home { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .rooms-list-wrap-home { grid-template-columns: 1fr; }
+}
+.room-card-h {
+  display: flex;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.08);
+  overflow: hidden;
+  min-height: 220px;
+}
+.rch-img-wrap {
+  position: relative;
+  width: 42%;
+  flex-shrink: 0;
+}
+.rch-img-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.rch-badge-avail {
+  position: absolute; top: 12px; left: 12px;
+  background: #10b981; color: #fff;
+  font-size: .78rem; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px;
+  z-index: 2;
+}
+.rch-floor {
+  position: absolute; bottom: 10px; left: 12px;
+  background: rgba(0,0,0,.55); color: #fff;
+  font-size: .78rem; padding: 3px 9px; border-radius: 12px;
+}
+.rch-body {
+  flex: 1; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px;
+}
+.rch-title { font-size: 1.25rem; font-weight: 700; color: #1a1a1a; margin: 0; }
+.rch-meta { display: flex; flex-direction: column; gap: 10px; }
+.rch-meta-row { display: flex; align-items: flex-start; gap: 10px; }
+.rch-meta-label {
+  font-size: .7rem; font-weight: 700; color: #aaa;
+  letter-spacing: .06em; min-width: 90px; padding-top: 3px;
+}
+.rch-chip {
+  display: inline-block; background: #f3f4f6;
+  color: #374151; font-size: .8rem;
+  padding: 3px 11px; border-radius: 20px; border: 1px solid #e5e7eb;
+}
+.rch-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.rch-guests { font-size: .85rem; color: #444; white-space: nowrap; }
+.rch-price-col {
+  width: 190px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  align-items: stretch; justify-content: center;
+  padding: 20px 18px; gap: 10px;
+  border-left: 1px solid #f0f0f0;
+}
+.rch-price-wrap { text-align: right; }
+.rch-price {
+  display: block; font-size: 1.5rem; font-weight: 700; color: #1a1a1a;
+}
+.rch-price-unit {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 4px; font-size: .78rem; color: #888;
+  margin-top: 2px; white-space: nowrap;
+}
+.btn-book-h {
+  display: block; text-align: center;
+  background: #10b981; color: #fff;
+  border-radius: 10px; padding: 11px 0;
+  font-weight: 700; font-size: .93rem;
+  text-decoration: none; transition: background .2s;
+}
+.btn-book-h:hover { background: #059669; }
+.btn-detail-h {
+  display: block; text-align: center;
+  border: 1.5px solid #d1d5db; color: #374151;
+  border-radius: 10px; padding: 10px 0;
+  font-weight: 600; font-size: .9rem;
+  text-decoration: none; transition: border-color .2s;
+}
+.btn-detail-h:hover { border-color: #10b981; color: #10b981; }
+@media (max-width: 720px) {
+  .room-card-h { flex-direction: column; }
+  .rch-img-wrap { width: 100%; height: 200px; }
+  .rch-price-col {
+    width: 100%; border-left: none; border-top: 1px solid #f0f0f0;
+    flex-direction: row; flex-wrap: wrap; align-items: center;
+  }
+  .rch-price-wrap { flex: 1; }
+}
+</style>
+
+            <div class="rooms-list-wrap-home">
 
 <?php
 // Lấy tối đa 3 phòng active từ danh sách đã truy vấn DB
@@ -98,36 +230,64 @@ $featuredRooms = array_slice($rooms, 0, 3);
 
 <?php if (!empty($featuredRooms)): ?>
     <?php foreach ($featuredRooms as $room): ?>
-    <div class="room-card">
-        <div class="card-img">
-            <img src="<?= getRoomImageUrl($room->getType(), 400, 200) ?>"
+    <div class="room-card-h">
+
+        <!-- Ảnh phòng -->
+        <div class="rch-img-wrap">
+            <span class="rch-badge-avail"><?= $room->isActive() ? 'Còn phòng' : 'Bảo trì' ?></span>
+            <img src="<?= getRoomImageUrl($room->getType(), 560, 340) ?>"
                  alt="<?= htmlspecialchars($room->getType()) ?>">
+            <span class="rch-floor">Tầng <?= htmlspecialchars($room->getRoomNumber())[0] ?? '1' ?></span>
         </div>
-        <div class="card-body">
-            <h3>Phòng <?= htmlspecialchars($room->getType()) ?></h3>
-            <p class="card-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?>đ / đêm</p>
-            <div class="card-badges">
-                <?php if ($room->isActive()): ?>
-                    <span class="badge green">Còn phòng</span>
-                <?php else: ?>
-                    <span class="badge" style="background:#fee2e2;color:#dc2626;">Bảo trì</span>
+
+        <!-- Thông tin phòng -->
+        <div class="rch-body">
+            <h3 class="rch-title">Phòng <?= htmlspecialchars($room->getType()) ?></h3>
+            <div class="rch-meta">
+                <div class="rch-meta-row">
+                    <span class="rch-meta-label">CƠ SỞ</span>
+                    <span class="rch-chip">Phòng Ngủ</span>
+                </div>
+                <?php $ams = $room->getAmenities(); if (!empty($ams)): ?>
+                <div class="rch-meta-row">
+                    <span class="rch-meta-label">TIỆN NGHI</span>
+                    <div class="rch-chips">
+                        <?php foreach (array_slice($ams, 0, 4) as $am): ?>
+                            <span class="rch-chip"><?= htmlspecialchars($am) ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
                 <?php endif; ?>
-            </div>
-            <p class="card-guests">Tối đa <?= $room->getMaxGuests() ?> khách</p>
-            <div class="card-actions">
-                <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book">Đặt ngay</a>
-                <a href="?action=room-detail&room_id=<?= $room->getId() ?>" class="btn-detail">Chi tiết</a>
+                <div class="rch-meta-row">
+                    <span class="rch-meta-label">KHÁCH HÀNG</span>
+                    <span class="rch-guests">
+                        👤 <?= $room->getMaxAdults() ?> Người Lớn &nbsp;
+                        🐣 <?= $room->getMaxChildren() ?> Trẻ Em
+                    </span>
+                </div>
             </div>
         </div>
+
+        <!-- Giá + nút -->
+        <div class="rch-price-col">
+            <div class="rch-price-wrap">
+                <span class="rch-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?></span>
+                <span class="rch-price-unit">
+                    <span>vnd mỗi đêm</span>
+                </span>
+            </div>
+            <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book-h">Đặt Ngay</a>
+            <a href="?action=room-detail&room_id=<?= $room->getId() ?>" class="btn-detail-h">Chi Tiết</a>
+        </div>
+
     </div>
     <?php endforeach; ?>
 <?php else: ?>
-    <div style="grid-column:1/-1; text-align:center; padding:40px; color:#888;">
+    <div style="text-align:center; padding:40px; color:#888;">
         <p>Hiện chưa có phòng nào. Vui lòng quay lại sau.</p>
     </div>
 <?php endif; ?>
 
-                </div>
             </div>
 
             <div class="center-btn">
