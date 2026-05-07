@@ -363,38 +363,7 @@ class BookingService
         return $bookings;
     }
 
-    /**
-     * Tính tổng tiền có tính phụ phí cuối tuần.
-     *
-     * Nghiệp vụ thực tế:
-     * - Đêm Thứ 6 và Thứ 7: giá tăng thêm 20%
-     * - Duyệt từng đêm để tính chính xác
-     */
-    public function calculatePrice(Room $room, DateTime $checkIn, DateTime $checkOut): float
-    {
-        $total       = 0.0;
-        $basePrice   = $room->getPricePerNight();
-        $currentDate = clone $checkIn; // clone để không thay đổi $checkIn gốc
-
-        // Duyệt từng đêm trong khoảng thời gian đặt
-        while ($currentDate < $checkOut) {
-            $dayOfWeek  = (int) $currentDate->format('N');
-            // format('N'): 1=T2, 2=T3, ..., 5=T6, 6=T7, 7=CN
-            $nightPrice = $basePrice;
-
-            // Tăng 20% cho đêm cuối tuần (Thứ 6 = 5, Thứ 7 = 6)
-            if (in_array($dayOfWeek, [5, 6])) {
-                $nightPrice *= 1.20; // *= : nhân và gán lại
-            }
-
-            $total += $nightPrice;
-
-            // Tăng ngày lên 1 để sang đêm tiếp theo
-            $currentDate->modify('+1 day');
-        }
-
-        return round($total, 0); // Làm tròn đến đồng nguyên
-    }
+  
     public function isRoomAvailable(int $roomId, string $checkIn, string $checkOut): bool
 {
     $sql = "SELECT COUNT(*) FROM bookings
