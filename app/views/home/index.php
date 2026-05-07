@@ -1,5 +1,14 @@
 <?php include ROOT_PATH . '/app/views/layout/header.php'; ?>
 <?php require_once ROOT_PATH . '/app/views/data.php'; ?>
+<?php
+/** @var \App\Models\Room[] $rooms — được truyền từ public/index.php (case 'home') */
+$rooms = $rooms ?? [];
+
+$today   = date('Y-m-d');
+$maxDate = date('Y-m-d', strtotime('+1 year'));
+$checkinVal  = htmlspecialchars($_GET['checkin']  ?? '');
+$checkoutVal = htmlspecialchars($_GET['checkout'] ?? '');
+?>
 
 <main>
 
@@ -12,72 +21,191 @@
         <p>Không gian nghỉ dưỡng sang trọng, dịch vụ tận tâm.</p>
     </div>
 
-    <div class="search-box">
+    <!-- Form tìm kiếm -->
+    <form class="search-box" method="GET" action="?" id="search-form" onsubmit="return validateDates()">
+        <input type="hidden" name="action" value="rooms">
+
         <div class="search-row">
-            <div class="search-field date-field" id="date-field" onclick="toggleCalendar()">
+
+            <!-- Ngày nhận phòng -->
+            <div class="search-field">
                 <span class="field-icon">📅</span>
                 <div class="field-text">
-                    <small>Ngày nhận — Ngày trả</small>
-                    <span id="date-label">Chọn ngày</span>
+                    <small>Ngày nhận phòng</small>
+                    <input type="date" name="checkin" id="checkin"
+                           min="<?= $today ?>"
+                           max="<?= $maxDate ?>"
+                           value="<?= $checkinVal ?>"
+                           onchange="enforceCheckin()"
+                           required>
                 </div>
             </div>
+
             <span class="search-divider">|</span>
-            <div class="search-field" id="guest-field" onclick="toggleGuests()">
+
+            <!-- Ngày trả phòng -->
+            <div class="search-field">
+                <span class="field-icon">📅</span>
+                <div class="field-text">
+                    <small>Ngày trả phòng</small>
+                    <input type="date" name="checkout" id="checkout"
+                           min="<?= date('Y-m-d', strtotime('+1 day')) ?>"
+                           max="<?= $maxDate ?>"
+                           value="<?= $checkoutVal ?>"
+                           required>
+                </div>
+            </div>
+
+            <span class="search-divider">|</span>
+
+            <!-- Người lớn -->
+            <div class="search-field">
                 <span class="field-icon">👤</span>
                 <div class="field-text">
-                    <small>Khách</small>
-                    <span id="guest-label">2 người lớn · 0 trẻ em</span>
+                    <small>Người lớn</small>
+                    <input type="number" name="adults"
+                           min="1" max="10"
+                           value="<?= (int)($_GET['adults'] ?? 2) ?>"
+                           style="border:none;outline:none;font-family:inherit;font-size:.95rem;font-weight:600;color:#333;background:transparent;width:60px;"
+                           required>
                 </div>
             </div>
-            <button class="btn-search" onclick="doSearch()">Tìm phòng</button>
-        </div>
 
-        <div class="calendar-popup" id="calendar-popup">
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 12px 2px;">
-                <button onclick="prevMonth()" title="Tháng trước"
-                        style="background:none; border:none; font-size:1.3rem; cursor:pointer;
-                               color:#009688; padding:4px 10px; border-radius:6px; line-height:1;"
-                        onmouseover="this.style.background='#e0f7f4'"
-                        onmouseout="this.style.background='none'">&#8249;</button>
-                <span id="cal-nav-label" style="font-size:.85rem; color:#555; font-weight:500;"></span>
-                <button onclick="nextMonth()" title="Tháng sau"
-                        style="background:none; border:none; font-size:1.3rem; cursor:pointer;
-                               color:#009688; padding:4px 10px; border-radius:6px; line-height:1;"
-                        onmouseover="this.style.background='#e0f7f4'"
-                        onmouseout="this.style.background='none'">&#8250;</button>
-            </div>
-            <div class="calendar-months">
-                <div class="cal-month" id="cal-left"></div>
-                <div class="cal-month" id="cal-right"></div>
-            </div>
-            <div class="cal-footer">
-                <button class="cal-clear" onclick="clearDates()">Xóa ngày</button>
-            </div>
-        </div>
+            <span class="search-divider">|</span>
 
-        <div class="guest-box" id="guest-box">
-            <div class="guest-row">
-                <div><strong>Người lớn</strong></div>
-                <div class="counter">
-                    <button onclick="changeGuest('adults',-1)">−</button>
-                    <span id="adults-count">2</span>
-                    <button onclick="changeGuest('adults',1)">+</button>
+            <!-- Trẻ em -->
+            <div class="search-field">
+                <span class="field-icon">🐣</span>
+                <div class="field-text">
+                    <small>Trẻ em</small>
+                    <input type="number" name="children"
+                           min="0" max="10"
+                           value="<?= (int)($_GET['children'] ?? 0) ?>"
+                           style="border:none;outline:none;font-family:inherit;font-size:.95rem;font-weight:600;color:#333;background:transparent;width:60px;">
                 </div>
             </div>
-            <div class="guest-row">
-                <div>
-                    <strong>Trẻ em</strong>
-                    <small style="display:block;color:#888;">Dưới 18 tuổi</small>
-                </div>
-                <div class="counter">
-                    <button onclick="changeGuest('children',-1)">−</button>
-                    <span id="children-count">0</span>
-                    <button onclick="changeGuest('children',1)">+</button>
-                </div>
-            </div>
-            <button class="btn-done" onclick="toggleGuests()">Xong</button>
+
+            <button type="submit" class="btn-search">Tìm phòng</button>
         </div>
-    </div>
+    </form>
+
+    <script>
+    var TODAY = '<?= $today ?>';
+    var MAX_DATE = '<?= $maxDate ?>';
+
+    function getTodayStr() {
+        // Lấy ngày hôm nay theo giờ LOCAL của client (tránh lệch UTC)
+        var d = new Date();
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + mm + '-' + dd;
+    }
+
+    function addDays(dateStr, n) {
+        var d = new Date(dateStr + 'T00:00:00');
+        d.setDate(d.getDate() + n);
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + mm + '-' + dd;
+    }
+
+    function addYears(dateStr, n) {
+        var d = new Date(dateStr + 'T00:00:00');
+        d.setFullYear(d.getFullYear() + n);
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + mm + '-' + dd;
+    }
+
+    function enforceCheckin() {
+        var cin = document.getElementById('checkin');
+        var today = getTodayStr();
+        // Nếu chọn ngày quá khứ → reset về hôm nay
+        if (cin.value && cin.value < today) {
+            cin.value = today;
+        }
+        syncCheckout();
+    }
+
+    function syncCheckout() {
+        var cin  = document.getElementById('checkin');
+        var cout = document.getElementById('checkout');
+        if (!cin.value) return;
+
+        var minCout = addDays(cin.value, 1);
+        var maxCout = addYears(cin.value, 1);
+
+        cin.setAttribute('min', getTodayStr());
+        cin.setAttribute('max', maxCout);
+        cout.setAttribute('min', minCout);
+        cout.setAttribute('max', maxCout);
+
+        // Reset checkout nếu không còn hợp lệ
+        if (cout.value && (cout.value <= cin.value || cout.value > maxCout)) {
+            cout.value = '';
+        }
+    }
+
+    function enforceCheckout() {
+        var cin  = document.getElementById('checkin');
+        var cout = document.getElementById('checkout');
+        if (!cin.value || !cout.value) return;
+        var minCout = addDays(cin.value, 1);
+        if (cout.value <= cin.value || cout.value < minCout) {
+            cout.value = '';
+        }
+    }
+
+    function validateDates() {
+        var cinVal  = document.getElementById('checkin').value;
+        var coutVal = document.getElementById('checkout').value;
+        var today   = getTodayStr();
+
+        if (!cinVal) {
+            alert('Vui lòng chọn ngày nhận phòng!');
+            return false;
+        }
+        if (!coutVal) {
+            alert('Vui lòng chọn ngày trả phòng!');
+            return false;
+        }
+        if (cinVal < today) {
+            alert('Ngày nhận phòng không được là ngày trong quá khứ!');
+            document.getElementById('checkin').value = today;
+            return false;
+        }
+        if (coutVal <= cinVal) {
+            alert('Ngày trả phòng phải sau ngày nhận phòng ít nhất 1 ngày!');
+            return false;
+        }
+        if (coutVal > addYears(cinVal, 1)) {
+            alert('Thời gian lưu trú tối đa là 1 năm!');
+            return false;
+        }
+        return true;
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+        var cin  = document.getElementById('checkin');
+        var cout = document.getElementById('checkout');
+        var today = getTodayStr();
+
+        // Set min/max ban đầu
+        cin.setAttribute('min', today);
+        cin.setAttribute('max', MAX_DATE);
+        cout.setAttribute('min', addDays(today, 1));
+        cout.setAttribute('max', MAX_DATE);
+
+        // Bắt cả change lẫn input (gõ tay + dùng picker)
+        cin.addEventListener('change', enforceCheckin);
+        cin.addEventListener('input',  enforceCheckin);
+        cout.addEventListener('change', enforceCheckout);
+        cout.addEventListener('input',  enforceCheckout);
+
+        // Đồng bộ nếu đã có giá trị (user bấm back)
+        if (cin.value) syncCheckout();
+    });
+    </script>
 
 </section>
 
@@ -224,7 +352,6 @@
             <div class="rooms-list-wrap-home">
 
 <?php
-// Lấy tối đa 3 phòng active từ danh sách đã truy vấn DB
 $featuredRooms = array_slice($rooms, 0, 3);
 ?>
 
@@ -232,7 +359,6 @@ $featuredRooms = array_slice($rooms, 0, 3);
     <?php foreach ($featuredRooms as $room): ?>
     <div class="room-card-h">
 
-        <!-- Ảnh phòng -->
         <div class="rch-img-wrap">
             <span class="rch-badge-avail"><?= $room->isActive() ? 'Còn phòng' : 'Bảo trì' ?></span>
             <img src="<?= getRoomImageUrl($room->getType(), 560, 340) ?>"
@@ -240,7 +366,6 @@ $featuredRooms = array_slice($rooms, 0, 3);
             <span class="rch-floor">Tầng <?= htmlspecialchars($room->getRoomNumber())[0] ?? '1' ?></span>
         </div>
 
-        <!-- Thông tin phòng -->
         <div class="rch-body">
             <h3 class="rch-title">Phòng <?= htmlspecialchars($room->getType()) ?></h3>
             <div class="rch-meta">
@@ -268,7 +393,6 @@ $featuredRooms = array_slice($rooms, 0, 3);
             </div>
         </div>
 
-        <!-- Giá + nút -->
         <div class="rch-price-col">
             <div class="rch-price-wrap">
                 <span class="rch-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?></span>
@@ -300,28 +424,13 @@ $featuredRooms = array_slice($rooms, 0, 3);
     <section class="section-amenities">
         <div class="container">
             <h2>Tiện nghi nổi bật</h2>
-<div class="amenities-grid">
-    <div class="amenity-item">
-        <div class="amenity-icon">🏊</div>
-        <p>Bể bơi ngoài trời</p>
-    </div>
-    <div class="amenity-item">
-        <div class="amenity-icon">🍹</div>
-        <p>Minibar</p>
-    </div>
-    <div class="amenity-item">
-        <div class="amenity-icon">🛎️</div>
-        <p>Butler 24/7</p>
-    </div>
-    <div class="amenity-item">
-        <div class="amenity-icon">🌊</div>
-        <p>Ban công / View biển</p>
-    </div>
-    <div class="amenity-item">
-        <div class="amenity-icon">🛋️</div>
-        <p>Phòng khách riêng</p>
-    </div>
-</div>
+            <div class="amenities-grid">
+                <div class="amenity-item"><div class="amenity-icon">🏊</div><p>Bể bơi ngoài trời</p></div>
+                <div class="amenity-item"><div class="amenity-icon">🍹</div><p>Minibar</p></div>
+                <div class="amenity-item"><div class="amenity-icon">🛎️</div><p>Butler 24/7</p></div>
+                <div class="amenity-item"><div class="amenity-icon">🌊</div><p>Ban công / View biển</p></div>
+                <div class="amenity-item"><div class="amenity-icon">🛋️</div><p>Phòng khách riêng</p></div>
+            </div>
         </div>
     </section>
 
@@ -339,15 +448,9 @@ $featuredRooms = array_slice($rooms, 0, 3);
                     </div>
                 </div>
                 <div class="gallery-col">
-                    <div class="gallery-item">
-                       <img src="<?= getRoomImageUrl('Suite', 400, 130) ?>" alt="Ảnh nhỏ">
-                    </div>
-                    <div class="gallery-item">
-                        <img src="<?= getRoomImageUrl('Penthouse', 400, 130) ?>" alt="Ảnh nhỏ">
-                    </div>
-                    <div class="gallery-item">
-                        <img src="<?= getRoomImageUrl('Luxury Sea View', 400, 130) ?>" alt="Ảnh nhỏ">
-                    </div>
+                    <div class="gallery-item"><img src="<?= getRoomImageUrl('Suite', 400, 130) ?>" alt="Suite"></div>
+                    <div class="gallery-item"><img src="<?= getRoomImageUrl('Penthouse', 400, 130) ?>" alt="Penthouse"></div>
+                    <div class="gallery-item"><img src="<?= getRoomImageUrl('Luxury Sea View', 400, 130) ?>" alt="Sea View"></div>
                 </div>
             </div>
         </div>
@@ -355,174 +458,4 @@ $featuredRooms = array_slice($rooms, 0, 3);
 
 </main>
 
-
-
-<script>
-// ===== STATE =====
-let checkinDate  = null;
-let checkoutDate = null;
-let adults   = 2;
-let children = 0;
-let selecting = 'checkin'; // 'checkin' | 'checkout'
-
-// ===== CALENDAR =====
-function toggleCalendar() {
-    const pop = document.getElementById('calendar-popup');
-    const guestBox = document.getElementById('guest-box');
-    guestBox.classList.remove('open');
-    pop.classList.toggle('open');
-    if (pop.classList.contains('open')) renderCalendars();
-}
-
-function toggleGuests() {
-    const guestBox = document.getElementById('guest-box');
-    const pop = document.getElementById('calendar-popup');
-    pop.classList.remove('open');
-    guestBox.classList.toggle('open');
-}
-
-// Đóng popup khi click ngoài
-document.addEventListener('click', function(e) {
-    const cal   = document.getElementById('calendar-popup');
-    const guest = document.getElementById('guest-box');
-
-    if (!e.target.closest('#date-field') && !e.target.closest('#calendar-popup'))
-        cal.classList.remove('open');
-
-    if (!e.target.closest('#guest-field') && !e.target.closest('#guest-box'))
-        guest.classList.remove('open');
-});
-
-let calYear  = new Date().getFullYear();
-let calMonth = new Date().getMonth(); // 0-indexed
-
-function renderCalendars() {
-    renderMonth('cal-left',  calYear, calMonth);
-    let ny = calMonth === 11 ? calYear + 1 : calYear;
-    let nm = calMonth === 11 ? 0 : calMonth + 1;
-    renderMonth('cal-right', ny, nm);
-
-    var monthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
-                      'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
-    var lbl = document.getElementById('cal-nav-label');
-    if (lbl) lbl.textContent = monthNames[calMonth] + ' ' + calYear
-                             + ' — ' + monthNames[nm] + ' ' + ny;
-}
-
-function prevMonth() {
-    if (calMonth === 0) { calMonth = 11; calYear--; }
-    else { calMonth--; }
-    renderCalendars();
-}
-
-function nextMonth() {
-    if (calMonth === 11) { calMonth = 0; calYear++; }
-    else { calMonth++; }
-    renderCalendars();
-}
-
-function renderMonth(elId, year, month) {
-    const el = document.getElementById(elId);
-    const monthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
-                        'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
-    const today = new Date(); today.setHours(0,0,0,0);
-
-    let html = `<h4>${monthNames[month]} ${year}</h4><div class="cal-grid">`;
-    ['T2','T3','T4','T5','T6','T7','CN'].forEach(d => {
-        html += `<div class="day-name">${d}</div>`;
-    });
-
-    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
-    const offset = firstDay === 0 ? 6 : firstDay - 1;
-    for (let i = 0; i < offset; i++) html += '<div></div>';
-
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(year, month, d);
-        date.setHours(0,0,0,0);
-        const ds = dateStr(date);
-        let cls = 'day';
-        if (date < today) cls += ' disabled';
-        if (checkinDate && ds === dateStr(checkinDate)) cls += ' selected';
-        if (checkoutDate && ds === dateStr(checkoutDate)) cls += ' selected';
-        if (checkinDate && checkoutDate && date > checkinDate && date < checkoutDate) cls += ' in-range';
-        const disabled = date < today ? 'disabled' : '';
-        html += `<button class="${cls}" ${disabled} onclick="selectDay(${year},${month},${d})">${d}</button>`;
-    }
-    html += '</div>';
-    el.innerHTML = html;
-}
-
-function selectDay(y, m, d) {
-    const date = new Date(y, m, d); date.setHours(0,0,0,0);
-    if (selecting === 'checkin' || (checkinDate && date <= checkinDate)) {
-        checkinDate  = date;
-        checkoutDate = null;
-        selecting = 'checkout';
-    } else {
-        checkoutDate = date;
-        selecting = 'checkin';
-        document.getElementById('calendar-popup').classList.remove('open');
-    }
-    updateDateLabel();
-    renderCalendars();
-}
-
-function clearDates() {
-    checkinDate = checkoutDate = null;
-    selecting = 'checkin';
-    updateDateLabel();
-    renderCalendars();
-}
-
-function dateStr(d) {
-    var yyyy = d.getFullYear();
-    var mm   = String(d.getMonth() + 1).padStart(2, '0');
-    var dd   = String(d.getDate()).padStart(2, '0');
-    return yyyy + '-' + mm + '-' + dd;
-}
-
-function formatVN(d) {
-    return d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
-}
-
-function updateDateLabel() {
-    const el = document.getElementById('date-label');
-    if (checkinDate && checkoutDate)
-        el.textContent = formatVN(checkinDate) + ' — ' + formatVN(checkoutDate);
-    else if (checkinDate)
-        el.textContent = formatVN(checkinDate) + ' — Chọn ngày trả';
-    else
-        el.textContent = 'Chọn ngày';
-}
-
-// ===== GUESTS =====
-function changeGuest(type, delta) {
-    if (type === 'adults') {
-        adults = Math.max(1, adults + delta);
-        document.getElementById('adults-count').textContent = adults;
-    } else {
-        children = Math.max(0, children + delta);
-        document.getElementById('children-count').textContent = children;
-    }
-    document.getElementById('guest-label').textContent =
-        adults + ' người lớn · ' + children + ' trẻ em';
-}
-
-// ===== TÌM PHÒNG =====
-function doSearch() {
-    if (!checkinDate || !checkoutDate) {
-        alert('Vui lòng chọn ngày nhận và ngày trả phòng!');
-        return;
-    }
-    const params = new URLSearchParams({
-        action:   'rooms',
-        checkin:  dateStr(checkinDate),
-        checkout: dateStr(checkoutDate),
-        adults:   adults,
-        children: children
-    });
-    window.location.href = '?' + params.toString();
-}
-</script>
 <?php include ROOT_PATH . '/app/views/layout/footer.php'; ?>
