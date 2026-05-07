@@ -427,14 +427,6 @@ in the Software without restriction...
 
 ---
 
-## 👥 Nhóm phát triển
-
-| Thành viên | Vai trò |
-|------------|---------|
-| Thiên Phúc | Backend, PHPMailer, Payment Integration |
-| Kiều Ngân | Frontend, UI/UX, Database Design |
-| *(Thêm thành viên)* | *(Vai trò)* |
-
 ---
 
 <div align="center">
