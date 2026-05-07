@@ -82,10 +82,9 @@ case 'rooms':
     require_once ROOT_PATH . '/app/services/BookingService.php';
     $service = new BookingService();
 
-    // Tham số ngày & khách (giữ nguyên như cũ)
-    $filterAdults   = max(0, (int)($_GET['adults']   ?? 0));
-    $filterChildren = max(0, (int)($_GET['children'] ?? 0));
-    $totalGuests    = $filterAdults + $filterChildren;
+    // Tham số ngày & khách
+    $filterGuests = max(0, (int)($_GET['guests'] ?? 0));
+    $totalGuests  = $filterGuests;
     $filterCheckIn  = trim($_GET['checkin']  ?? '');
     $filterCheckOut = trim($_GET['checkout'] ?? '');
 
@@ -138,7 +137,7 @@ case 'rooms':
             $parts = [];
             if ($checkInDate && $checkOutDate)
                 $parts[] = 'từ ' . $checkInDate->format('d/m/Y') . ' đến ' . $checkOutDate->format('d/m/Y');
-            if ($totalGuests > 0)   $parts[] = "cho {$totalGuests} khách";
+            if ($filterGuests > 0)  $parts[] = "cho {$filterGuests} khách";
             if ($filterType !== '') $parts[] = "loại \"{$filterType}\"";
             if ($filterPriceMin > 0 || $filterPriceMax > 0) {
                 $mn = $filterPriceMin > 0 ? number_format($filterPriceMin,0,',','.') . 'đ' : '0';
@@ -188,8 +187,7 @@ case 'rooms':
         'action'    => 'rooms',
         'checkin'   => $filterCheckIn,
         'checkout'  => $filterCheckOut,
-        'adults'    => $filterAdults   ?: null,
-        'children'  => $filterChildren ?: null,
+        'guests'    => $filterGuests  ?: null,
         'price_min' => $filterPriceMin ?: null,
         'price_max' => $filterPriceMax ?: null,
         'room_type' => $filterType,
