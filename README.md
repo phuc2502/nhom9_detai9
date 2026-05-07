@@ -449,13 +449,6 @@ in the Software without restriction...
 - Viết class kết nối `core/Database.php` (Singleton PDO)
 - Cung cấp các public method tái sử dụng cho toàn nhóm: `getRoomList()`, `insertBooking()`, `checkLogin()`
 
-```php
-// Ví dụ: Database.php — Singleton PDO connection
-class Database {
-    private static ?PDO $instance = null;
-    public static function getInstance(): PDO { ... }
-}
-```
 
 ---
 
@@ -468,13 +461,7 @@ class Database {
   - Thuật toán lọc dữ liệu, hiển thị **"Hết phòng"** hoặc **"Gợi ý phòng tương tự"**
   - Gọi method của Thu Lan để bóc tách mảng kết quả
 
-```php
-// Ví dụ: Validate ngày bằng Regex
-$datePattern = '/^\d{4}-\d{2}-\d{2}$/';
-if (!preg_match($datePattern, $checkIn)) {
-    $searchError = 'Ngày không đúng định dạng.';
-}
-```
+
 
 ---
 
@@ -487,15 +474,6 @@ if (!preg_match($datePattern, $checkIn)) {
 - Triển khai **Builder Pattern** (`BookingBuilder`) khi tạo đơn — yêu cầu môn học
 - Giao tiếp với DB thông qua public method của Thu Lan, không tự chạy SQL trực tiếp
 
-```php
-// Ví dụ: Builder Pattern
-$booking = (new BookingBuilder())
-    ->setRoom($room)
-    ->setCheckIn($checkIn)
-    ->setCheckOut($checkOut)
-    ->setGuestInfo($fullname, $phone, $email)
-    ->build();
-```
 
 ---
 
@@ -509,13 +487,6 @@ $booking = (new BookingBuilder())
 - Tích hợp **PHPMailer** — gửi email xác nhận tự động qua Gmail SMTP
 - Giao tiếp với DB thông qua public method của Thu Lan
 
-```php
-// Ví dụ: PHPMailer Factory
-$mail = self::createMailer();
-$mail->addAddress($booking->getEmail());
-$mail->Subject = "[LuxStay] Xác nhận đặt phòng";
-$mail->send();
-```
 
 ---
 
