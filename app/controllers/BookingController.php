@@ -106,6 +106,22 @@ class BookingController
         // Kiểm tra tổng khách không vượt sức chứa phòng TRƯỚC KHI vào builder
         try {
             $roomForCheck = $this->service->findRoomById($roomId);
+            if ($adults > $roomForCheck->getMaxAdults()) {
+                $this->renderBookingError(
+                    "Số người lớn ({$adults} người) vượt quá giới hạn phòng " .
+                    "(tối đa {$roomForCheck->getMaxAdults()} người lớn). " .
+                    "Vui lòng giảm số người lớn."
+                );
+                return;
+            }
+            if ($children > $roomForCheck->getMaxChildren()) {
+                $this->renderBookingError(
+                    "Số trẻ em ({$children} trẻ em) vượt quá giới hạn phòng " .
+                    "(tối đa {$roomForCheck->getMaxChildren()} trẻ em). " .
+                    "Vui lòng giảm số trẻ em."
+                );
+                return;
+            }
             if ($guests > $roomForCheck->getMaxGuests()) {
                 $this->renderBookingError(
                     "Tổng số khách ({$guests} người) vượt quá sức chứa phòng " .

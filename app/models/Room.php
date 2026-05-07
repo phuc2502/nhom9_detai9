@@ -2,8 +2,9 @@
 // =============================================
 // File: app/models/Room.php
 // Tầng: Model
-// THAY ĐỔI so với file gốc:
+// THAY ĐỔI:
 // + Thêm $roomNumber, $isActive
+// + Thêm $maxAdults, $maxChildren
 // + Thêm Room::fromDB() để tạo từ row database
 // =============================================
 
@@ -16,10 +17,10 @@ class Room
     private string $type;
     private float  $pricePerNight;
     private int    $maxGuests;
+    private int    $maxAdults;
+    private int    $maxChildren;
     private bool   $isActive;
     private array  $amenities;
-
-
 
     public function __construct(
         int    $id,
@@ -28,7 +29,9 @@ class Room
         float  $pricePerNight,
         int    $maxGuests,
         bool   $isActive = true,
-        array  $amenities = []
+        array  $amenities = [],
+        int    $maxAdults = 2,
+        int    $maxChildren = 0
     ) {
         $this->id            = $id;
         $this->roomNumber    = $roomNumber;
@@ -37,7 +40,8 @@ class Room
         $this->maxGuests     = $maxGuests;
         $this->isActive      = $isActive;
         $this->amenities     = $amenities;
-
+        $this->maxAdults     = $maxAdults;
+        $this->maxChildren   = $maxChildren;
     }
 
     public function getId(): int              { return $this->id; }
@@ -45,48 +49,36 @@ class Room
     public function getType(): string         { return $this->type; }
     public function getPricePerNight(): float { return $this->pricePerNight; }
     public function getMaxGuests(): int       { return $this->maxGuests; }
+    public function getMaxAdults(): int       { return $this->maxAdults; }
+    public function getMaxChildren(): int     { return $this->maxChildren; }
     public function getIsActive(): bool       { return $this->isActive; }
-    public function getAmenities(): array
-{
-    return $this->amenities;
-}
+    public function getAmenities(): array     { return $this->amenities; }
 
-
-    /**
-     * Kiểm tra phòng đang hoạt động không (is_active = 1 trong DB).
-     * BookingService gọi trước khi cho đặt phòng.
-     */
     public function isActive(): bool
     {
         return $this->isActive;
     }
 
-    /**
-     * Static factory: tạo Room từ 1 row PDO fetch().
-     * Cách dùng: $room = Room::fromDB($row);
-     * static → gọi qua Room::fromDB() không cần new trước
-     */
     public static function fromDB(array $row): self
-{
-    $amenities = [];
-
-    if (!empty($row['amenities'])) {
-        $decoded = json_decode($row['amenities'], true);
-
-        if (is_array($decoded)) {
-            $amenities = $decoded;
+    {
+        $amenities = [];
+        if (!empty($row['amenities'])) {
+            $decoded = json_decode($row['amenities'], true);
+            if (is_array($decoded)) {
+                $amenities = $decoded;
+            }
         }
+
+        return new self(
+            (int)   $row['id'],
+                    $row['room_number'],
+                    $row['type'],
+            (float) $row['price_per_night'],
+            (int)   $row['max_guests'],
+            (bool)  $row['is_active'],
+                    $amenities,
+            (int)  ($row['max_adults']   ?? 2),
+            (int)  ($row['max_children'] ?? 0)
+        );
     }
-
-    return new self(
-        (int)   $row['id'],
-                $row['room_number'],
-                $row['type'],
-        (float) $row['price_per_night'],
-        (int)   $row['max_guests'],
-        (bool)  $row['is_active'],
-                $amenities
-    );
-}
-
 }
