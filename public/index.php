@@ -43,6 +43,26 @@ case 'payment/qr':
     (new PaymentController())->showQR();
     break;
 
+case 'payment/cancel':
+    require_once ROOT_PATH . '/app/controllers/PaymentController.php';
+    (new PaymentController())->cancel();
+    break;
+
+case 'payment/leave':
+    // Gọi khi user rời trang QR (beacon/fetch khi unload)
+    header('Content-Type: application/json');
+    $bookingId = (int)($_GET['booking_id'] ?? 0);
+    if ($bookingId > 0) {
+        require_once ROOT_PATH . '/app/services/BookingService.php';
+        $svc     = new BookingService();
+        $booking = $svc->findBookingById($bookingId);
+        if ($booking && $booking->getStatus() === 'pending') {
+            $svc->updateBookingStatus($bookingId, 'cancelled');
+        }
+    }
+    echo json_encode(['ok' => true]);
+    exit;
+
 case 'payment/check':
     require_once ROOT_PATH . '/app/controllers/PaymentController.php';
     (new PaymentController())->checkStatus();
@@ -130,8 +150,25 @@ case 'rooms':
 
             if (!empty($parts)) $searchNotice = 'Bộ lọc: ' . implode(' | ', $parts);
 
-            if (empty($allRooms))
-                $suggestedRooms = $service->getSuggestedRooms($totalGuests, [], 3);
+            if (empty($allRooms)) {
+                // Khi có ngày tìm kiếm: loại trừ phòng đang bị đặt trùng lịch khỏi gợi ý
+                // → tránh gợi ý phòng mà user không đặt được.
+                // Khi không có ngày: $excludeIds rỗng → gợi ý phòng active bất kỳ.
+                $excludeIds = [];
+                if ($checkInDate && $checkOutDate) {
+                    $availableIds = array_map(
+                        fn($r) => $r->getId(),
+                        $service->searchAvailableRooms($checkInDate, $checkOutDate, 0)
+                    );
+                    $allActiveIds = array_map(
+                        fn($r) => $r->getId(),
+                        $service->getActiveRooms()
+                    );
+                    // Phòng bị đặt = active nhưng không còn trống trong khoảng ngày đó
+                    $excludeIds = array_values(array_diff($allActiveIds, $availableIds));
+                }
+                $suggestedRooms = $service->getSuggestedRooms($totalGuests, $excludeIds, 3);
+            }
 
         } catch (\Throwable $e) {
             $searchError = 'Không thể tải danh sách phòng. Vui lòng thử lại.';
@@ -145,6 +182,8 @@ case 'rooms':
     $page       = max(1, min((int)($_GET['page'] ?? 1), $totalPages));
     $rooms      = array_slice($allRooms, ($page - 1) * $perPage, $perPage);
 
+    // Lưu ý: amenities[] là mảng, http_build_query tự tạo dạng amenities%5B0%5D=...
+    // PHP đọc lại đúng thành $_GET['amenities'] là array → hoạt động bình thường.
     $paginationQuery = http_build_query(array_filter([
         'action'    => 'rooms',
         'checkin'   => $filterCheckIn,
@@ -154,6 +193,7 @@ case 'rooms':
         'price_min' => $filterPriceMin ?: null,
         'price_max' => $filterPriceMax ?: null,
         'room_type' => $filterType,
+        'amenities' => !empty($filterAmenities) ? $filterAmenities : null,
         'sort'      => $filterSortBy !== 'price_asc' ? $filterSortBy : null,
     ], fn($v) => $v !== '' && $v !== null));
 
@@ -193,12 +233,8 @@ case 'contact':
 
         if ($name !== '' && $email !== '' && $message !== '') {
             try {
-                $mailResult = MailService::sendContactForm($name, $email, $message);
-                if ($mailResult['admin']) {
-                    $contactSuccess = true;
-                } else {
-                    $contactError = 'Không thể gửi liên hệ lúc này. Vui lòng thử lại sau.';
-                }
+                MailService::sendContactForm($name, $email, $message);
+                $contactSuccess = true;
             } catch (\Throwable $e) {
                 $contactError = 'Không thể gửi liên hệ lúc này. Vui lòng thử lại sau.';
             }
