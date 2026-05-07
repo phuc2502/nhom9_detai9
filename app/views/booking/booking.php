@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span style="background:#e0f7f4; color:#00796b; font-size:.8rem;
                                      padding:2px 8px; border-radius:20px; font-weight:500;">
                             👤 <?= $preselectedRoom->getMaxAdults() ?> người lớn &nbsp;
-                            🐣 <?= $preselectedRoom->getMaxChildren() ?> trẻ em
+                            👶 <?= $preselectedRoom->getMaxChildren() ?> trẻ em
                         </span>
                     </div>
                 </div>
@@ -470,7 +470,7 @@ function validateForm() {
     /* Kiểm tra số trẻ em không vượt max_children */
     var maxChildren = parseInt(document.getElementById('room-max-children')?.value) || 0;
     if (children > maxChildren) {
-        showToast('🐣', 'Số trẻ em vượt giới hạn',
+        showToast('👶', 'Số trẻ em vượt giới hạn',
             'Phòng này chỉ chứa tối đa <strong>' + maxChildren + ' trẻ em</strong>.<br>' +
             'Bạn đang nhập <strong>' + children + ' trẻ em</strong>.');
         return;
