@@ -566,14 +566,14 @@ public function getSuggestedRooms(int $guests, array $excludeIds = [], int $limi
         $rooms = array_map([Room::class, 'fromDB'], $stmt->fetchAll(PDO::FETCH_ASSOC));
 
         // Lọc tiện nghi ở PHP (vì lưu dạng JSON trong DB)
-        // Logic OR: phòng có ÍT NHẤT 1 trong các tiện nghi được chọn là đủ điều kiện
+        // Logic AND: phòng phải có TẤT CẢ các tiện nghi được chọn mới hiển thị
         if (!empty($amenities)) {
             $rooms = array_values(array_filter($rooms, function (Room $room) use ($amenities) {
                 $roomAmenities = array_map('trim', $room->getAmenities());
                 foreach ($amenities as $selected) {
-                    if (in_array(trim($selected), $roomAmenities, true)) return true;
+                    if (!in_array(trim($selected), $roomAmenities, true)) return false;
                 }
-                return false;
+                return true;
             }));
         }
 
