@@ -50,7 +50,7 @@ img {
    ============================================ */
 .header {
     background: var(--toi);
-    position: fixed;      /* dính trên đầu trang khi scroll */
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -59,6 +59,12 @@ img {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.header nav {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 /* Logo */
