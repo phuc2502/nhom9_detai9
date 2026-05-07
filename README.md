@@ -448,6 +448,7 @@ in the Software without restriction...
 - Chịu trách nhiệm tạo và quản lý file `hotelbooking.sql`
 - Viết class kết nối `core/Database.php` (Singleton PDO)
 - Cung cấp các public method tái sử dụng cho toàn nhóm: `getRoomList()`, `insertBooking()`, `checkLogin()`
+- **Bộ lọc phòng đa tiêu chí:** Viết `filterRooms()` hỗ trợ lọc theo giá, loại phòng, tiện nghi, ngày trống và số khách; kết hợp sắp xếp (`price_asc`, `price_desc`, `guests_asc`)
 
 
 ---
