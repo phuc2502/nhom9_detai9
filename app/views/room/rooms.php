@@ -107,13 +107,64 @@ require_once ROOT_PATH . '/app/views/data.php';
         <p>Hãy thử thay đổi bộ lọc để xem thêm lựa chọn.</p>
       </div>
     <?php else: ?>
-      <div class="rooms-grid">
-        <?php foreach ($rooms as $room): ?>
-          <div class="room-card">
-            <div class="card-img">
-              <img src="<?= getRoomImageUrl($room->getType(), 400, 200) ?>"
-                   alt="<?= htmlspecialchars($room->getType()) ?>">
-            </div>
+      <div class="rooms-list-wrap">
+  <div class="list-topbar">
+    <span class="result-count">Hiển thị <strong><?= $total ?></strong> phòng</span>
+    <select class="sort-select" onchange="this.form && this.form.submit()" name="sort" form="filter-form">
+      <option value="price_asc"  <?= $filterSortBy==='price_asc'  ? 'selected':'' ?>>Sắp xếp mặc định</option>
+      <option value="price_asc"  <?= $filterSortBy==='price_asc'  ? 'selected':'' ?>>Giá tăng dần</option>
+      <option value="price_desc" <?= $filterSortBy==='price_desc' ? 'selected':'' ?>>Giá giảm dần</option>
+      <option value="guests_asc" <?= $filterSortBy==='guests_asc' ? 'selected':'' ?>>Số khách tăng</option>
+      <option value="type_asc"   <?= $filterSortBy==='type_asc'   ? 'selected':'' ?>>Tên A→Z</option>
+    </select>
+  </div>
+
+  <?php foreach ($rooms as $room): ?>
+  <div class="room-card-h">
+    <div class="rch-img-wrap">
+      <span class="rch-badge-avail">Còn phòng</span>
+      <img src="<?= getRoomImageUrl($room->getType(), 560, 340) ?>"
+           alt="<?= htmlspecialchars($room->getType()) ?>">
+      <span class="rch-floor">Tầng <?= htmlspecialchars($room->getRoomNumber())[0] ?? '1' ?></span>
+    </div>
+    <div class="rch-body">
+      <h3 class="rch-title">Phòng <?= htmlspecialchars($room->getType()) ?></h3>
+
+      <div class="rch-meta">
+        <div class="rch-meta-row">
+          <span class="rch-meta-label">CƠ SỞ</span>
+          <span class="rch-chip">Phòng Ngủ</span>
+        </div>
+        <?php $ams = $room->getAmenities(); if (!empty($ams)): ?>
+        <div class="rch-meta-row">
+          <span class="rch-meta-label">TIỆN NGHI</span>
+          <div class="rch-chips">
+            <?php foreach (array_slice($ams, 0, 4) as $am): ?>
+              <span class="rch-chip"><?= htmlspecialchars($am) ?></span>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endif; ?>
+        <div class="rch-meta-row">
+          <span class="rch-meta-label">KHÁCH HÀNG</span>
+          <span class="rch-guests">
+            👤 <?= $room->getMaxGuests() ?> Người Lớn &nbsp;
+            🐣 0 Trẻ Em
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="rch-price-col">
+      <div class="rch-price-wrap">
+        <span class="rch-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?></span>
+        <span class="rch-price-unit">vnd mỗi đêm <span class="rch-vat">Chưa VAT</span></span>
+      </div>
+      <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book-h">Đặt Ngay</a>
+      <a href="?action=room-detail&room_id=<?= $room->getId() ?>" class="btn-detail-h">Chi Tiết</a>
+    </div>
+  </div>
+  <?php endforeach; ?>
+</div>
             <div class="card-body">
               <h3>Phòng <?= htmlspecialchars($room->getType()) ?></h3>
               <p class="card-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?>đ / đêm</p>

@@ -580,15 +580,19 @@ public function getSuggestedRooms(int $guests, array $excludeIds = [], int $limi
      * Lấy tất cả tiện nghi duy nhất từ tất cả phòng.
      */
     public function getAllAmenities(): array
-    {
-        $stmt = $this->db->query(
-            "SELECT amenities FROM rooms WHERE is_active = 1 AND amenities IS NOT NULL"
-        );
-        $all = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $json) {
-            $decoded = json_decode($json, true);
-            if (is_array($decoded)) $all = array_merge($all, $decoded);
-        }
-        return array_values(array_unique($all));
-    }
+{
+    // Danh sách tiện nghi cố định — chỉ hiển thị đúng 10 loại này
+    return [
+        'Wifi',
+        'Điều hòa',
+        'TV',
+        'Minibar',
+        'Ban công',
+        'Bồn tắm',
+        'Bàn làm việc',
+        'Phòng khách riêng',
+        'Hồ bơi',
+        'Butler 24/7',
+    ];
+}
 }
