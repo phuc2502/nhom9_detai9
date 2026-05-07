@@ -606,7 +606,7 @@ public function getSuggestedRooms(int $guests, array $excludeIds = [], int $limi
         'Điều hòa',
         'TV',
         'Minibar',
-        'Ban công',
+        'Ban công/View biển',
         'Bồn tắm',
         'Bàn làm việc',
         'Phòng khách riêng',
