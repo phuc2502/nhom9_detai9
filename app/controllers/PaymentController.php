@@ -41,9 +41,19 @@ class PaymentController
             header('Location: ' . $this->url('booking')); exit;
         }
 
+        // Lưu vào session để giữ lại khi user bấm back rồi vào lại
+        $_SESSION['payment_booking_id'] = $bookingId;
+
         // Nếu đã confirmed rồi (reload lại trang) → thẳng sang success
         if ($booking->getStatus() === 'confirmed') {
             header('Location: ' . $this->url('payment/success') . '&booking_id=' . $bookingId);
+            exit;
+        }
+
+        // Nếu booking đã bị hủy (thoát ra ngoài / hết 15 phút) → thông báo và về trang phòng
+        if ($booking->getStatus() === 'cancelled') {
+            unset($_SESSION['payment_booking_id']);
+            header('Location: ' . $this->url('rooms') . '&notify=expired');
             exit;
         }
 
@@ -96,6 +106,25 @@ class PaymentController
             exit;
         }
 
+        // Nếu booking đã cancelled (user hủy hoặc thoát ra) → trả về expired
+        if ($booking->getStatus() === 'cancelled') {
+            echo json_encode(['status' => 'cancelled', 'confirmed' => false, 'expired' => true]);
+            exit;
+        }
+
+        // Kiểm tra nếu pending đã quá 15 phút → tự động cancel
+        if ($booking->getStatus() === 'pending') {
+            $createdAt = new \DateTime($booking->getCreatedAt());
+            $elapsed   = (new \DateTime())->getTimestamp() - $createdAt->getTimestamp();
+            if ($elapsed >= 15 * 60) {
+                $this->bookingService->updateBookingStatus($bookingId, 'cancelled');
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                unset($_SESSION['payment_booking_id']);
+                echo json_encode(['status' => 'cancelled', 'confirmed' => false, 'expired' => true]);
+                exit;
+            }
+        }
+
         // Hỏi SePay API xem có giao dịch khớp chưa
         require_once ROOT_PATH . '/app/services/SePayApiService.php';
         $sePayApi = new SePayApiService();
@@ -111,20 +140,13 @@ class PaymentController
         $paid = $sePayApi->checkPayment($bookingId, $booking->getTotalPrice());
 
         if ($paid) {
-            $updated = $this->bookingService->updateBookingStatus($bookingId, 'confirmed');
+            $this->bookingService->updateBookingStatus($bookingId, 'confirmed');
 
-            // Chỉ gửi email nếu chính request này là người update thành công
-            // (tránh gửi trùng khi webhook đã update trước)
-            if ($updated) {
-                try {
-                    // Re-fetch booking để có status mới nhất
-                    $freshBooking = $this->bookingService->findBookingById($bookingId);
-                    if ($freshBooking) {
-                        MailService::sendPaymentConfirmation($freshBooking);
-                    }
-                } catch (\Throwable $e) {
-                    // Ghi log, không ảnh hưởng response
-                }
+            // ── GỬI EMAIL XÁC NHẬN THANH TOÁN ──
+            try {
+                MailService::sendPaymentConfirmation($booking);
+            } catch (\Throwable $e) {
+                // Ghi log, không ảnh hưởng response
             }
 
             echo json_encode([
@@ -179,17 +201,12 @@ class PaymentController
         $booking   = $this->bookingService->findBookingById($bookingId);
 
         if ($booking && $booking->getStatus() === 'pending') {
-            $updated = $this->bookingService->updateBookingStatus($bookingId, 'confirmed');
+            $this->bookingService->updateBookingStatus($bookingId, 'confirmed');
 
-            // Chỉ gửi email nếu chính webhook này là người update thành công
-            if ($updated) {
-                try {
-                    $freshBooking = $this->bookingService->findBookingById($bookingId);
-                    if ($freshBooking) {
-                        MailService::sendPaymentConfirmation($freshBooking);
-                    }
-                } catch (\Throwable $e) {}
-            }
+            // ── GỬI EMAIL XÁC NHẬN THANH TOÁN (qua webhook) ──
+            try {
+                MailService::sendPaymentConfirmation($booking);
+            } catch (\Throwable $e) {}
 
             SePayService::log('CONFIRMED', [
                 'bookingId' => $bookingId,
@@ -230,6 +247,44 @@ class PaymentController
         unset($_SESSION['last_booking_id'], $_SESSION['payment_booking_id']);
 
         $this->render('payment/success', ['booking' => $booking]);
+    }
+
+    // ============================================================
+    // [5] HỦY ĐẶT PHÒNG (AJAX)
+    // URL: ?action=payment/cancel&booking_id=X  (POST)
+    // Trả về JSON: { "success": true } hoặc { "success": false, "error": "..." }
+    // ============================================================
+    public function cancel(): void
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']); exit;
+        }
+
+        $bookingId = (int)($_GET['booking_id'] ?? 0);
+        if ($bookingId === 0) {
+            echo json_encode(['success' => false, 'error' => 'Thiếu booking_id']); exit;
+        }
+
+        $booking = $this->bookingService->findBookingById($bookingId);
+        if (!$booking) {
+            echo json_encode(['success' => false, 'error' => 'Không tìm thấy đặt phòng']); exit;
+        }
+
+        if ($booking->getStatus() !== 'pending') {
+            echo json_encode(['success' => false, 'error' => 'Chỉ hủy được khi đang chờ thanh toán']); exit;
+        }
+
+        $ok = $this->bookingService->updateBookingStatus($bookingId, 'cancelled');
+        if ($ok) {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+            unset($_SESSION['payment_booking_id']);
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Không thể cập nhật trạng thái']);
+        }
+        exit;
     }
 
     // ---- Helpers ----
