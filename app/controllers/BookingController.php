@@ -173,21 +173,8 @@ class BookingController
                 $_SESSION['payment_booking_id'] = $booking->getId();
                 header('Location: ' . $this->url('payment/qr') . '&booking_id=' . $booking->getId());
             } else {
-                // Tại quầy: giả định đã thanh toán → đổi status confirmed
-                $updated = $this->service->updateBookingStatus($booking->getId(), 'confirmed');
-
-                // Gửi email xác nhận thanh toán nếu update thành công
-                if ($updated) {
-                    try {
-                        $freshBooking = $this->service->findBookingById($booking->getId());
-                        if ($freshBooking) {
-                            MailService::sendPaymentConfirmation($freshBooking);
-                        }
-                    } catch (\Throwable $e) {
-                        // Ghi log, không ảnh hưởng redirect
-                    }
-                }
-
+                // Tại quầy: chỉ nhận email xác nhận đặt phòng (đã gửi ở trên)
+                // Không gửi email thanh toán — khách sẽ thanh toán trực tiếp tại quầy
                 header('Location: ' . $this->url('booking/confirm'));
             }
             exit;
