@@ -101,7 +101,6 @@ class MailService
 
     /**
      * Gửi email từ form liên hệ (cho admin + auto-reply cho khách).
-     *
      * Trả về mảng kết quả chi tiết:
      *   ['admin' => bool, 'reply' => bool, 'error' => string|null]
      * - admin: email gửi tới admin thành công hay không
@@ -124,8 +123,8 @@ class MailService
         } catch (Exception $e) {
             $result['error'] = $e->getMessage();
             self::log('MAIL_ERROR', [
-                'type'  => 'contact_to_admin',
-                'from'  => $email,
+                'type' => 'contact_to_admin',
+                'from' => $email,
                 'error' => $e->getMessage(),
             ]);
         }
@@ -142,8 +141,8 @@ class MailService
                 $result['reply'] = true;
             } catch (Exception $e) {
                 self::log('MAIL_ERROR', [
-                    'type'  => 'contact_auto_reply',
-                    'to'    => $email,
+                    'type' => 'contact_auto_reply',
+                    'to' => $email,
                     'error' => $e->getMessage(),
                 ]);
             }
@@ -151,8 +150,8 @@ class MailService
 
         // Log tổng hợp
         self::log('CONTACT_MAIL', [
-            'from'       => $email,
-            'name'       => $name,
+            'from' => $email,
+            'name' => $name,
             'admin_sent' => $result['admin'],
             'reply_sent' => $result['reply'],
         ]);
