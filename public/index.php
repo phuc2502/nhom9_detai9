@@ -232,10 +232,10 @@ case 'contact':
         $message = trim($_POST['message'] ?? '');
 
         if ($name !== '' && $email !== '' && $message !== '') {
-            try {
-                MailService::sendContactForm($name, $email, $message);
+            $mailResult = MailService::sendContactForm($name, $email, $message);
+            if ($mailResult['admin']) {
                 $contactSuccess = true;
-            } catch (\Throwable $e) {
+            } else {
                 $contactError = 'Không thể gửi liên hệ lúc này. Vui lòng thử lại sau.';
             }
         } else {

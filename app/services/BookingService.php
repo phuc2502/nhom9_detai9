@@ -408,13 +408,26 @@ class BookingService
 }
     /**
      * Cập nhật status booking (dùng cho webhook SePay).
+     * Dùng AND status = 'pending' để đảm bảo atomic:
+     * chỉ request đầu tiên update được → tránh gửi email trùng.
      */
     public function updateBookingStatus(int $bookingId, string $status): bool
     {
         $valid = ['pending', 'confirmed', 'cancelled'];
         if (!in_array($status, $valid, true)) return false;
 
-        $stmt = $this->db->prepare("UPDATE bookings SET status = :status WHERE id = :id");
+        // Nếu chuyển sang confirmed: chỉ update khi đang pending
+        // → ngăn polling và webhook cùng gửi email
+        if ($status === 'confirmed') {
+            $stmt = $this->db->prepare(
+                "UPDATE bookings SET status = :status WHERE id = :id AND status = 'pending'"
+            );
+        } else {
+            $stmt = $this->db->prepare(
+                "UPDATE bookings SET status = :status WHERE id = :id"
+            );
+        }
+
         $stmt->execute([':status' => $status, ':id' => $bookingId]);
         return $stmt->rowCount() > 0;
     }

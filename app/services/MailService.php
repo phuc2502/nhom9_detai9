@@ -101,9 +101,18 @@ class MailService
 
     /**
      * Gửi email từ form liên hệ (cho admin + auto-reply cho khách).
+     *
+     * Trả về mảng kết quả chi tiết:
+     *   ['admin' => bool, 'reply' => bool, 'error' => string|null]
+     * - admin: email gửi tới admin thành công hay không
+     * - reply: auto-reply cho khách thành công hay không
+     * - error: thông báo lỗi nếu có
      */
-    public static function sendContactForm(string $name, string $email, string $message): bool
+    public static function sendContactForm(string $name, string $email, string $message): array
     {
+        $result = ['admin' => false, 'reply' => false, 'error' => null];
+
+        // Email 1: Gửi cho admin — try/catch riêng
         try {
             $mail = self::createMailer();
             $mail->addAddress(MAIL_ADMIN);
@@ -111,29 +120,44 @@ class MailService
             $mail->Subject = "[LuxStay] Liên hệ từ " . $name;
             $mail->Body = self::buildContactEmailBody($name, $email, $message);
             $mail->send();
-
-            // Auto-reply cho khách
-            $reply = self::createMailer();
-            $reply->addAddress($email, $name);
-            $reply->Subject = "[LuxStay] Cảm ơn bạn đã liên hệ!";
-            $reply->Body = self::buildAutoReplyBody($name);
-            $reply->send();
-
-            self::log('CONTACT_MAIL', [
-                'from' => $email,
-                'name' => $name,
-                'status' => 'sent',
-            ]);
-            return true;
-
+            $result['admin'] = true;
         } catch (Exception $e) {
+            $result['error'] = $e->getMessage();
             self::log('MAIL_ERROR', [
-                'type' => 'contact_form',
-                'from' => $email,
+                'type'  => 'contact_to_admin',
+                'from'  => $email,
                 'error' => $e->getMessage(),
             ]);
-            return false;
         }
+
+        // Email 2: Auto-reply cho khách — try/catch riêng
+        // Chỉ gửi nếu email admin đã gửi thành công
+        if ($result['admin']) {
+            try {
+                $reply = self::createMailer();
+                $reply->addAddress($email, $name);
+                $reply->Subject = "[LuxStay] Cảm ơn bạn đã liên hệ!";
+                $reply->Body = self::buildAutoReplyBody($name);
+                $reply->send();
+                $result['reply'] = true;
+            } catch (Exception $e) {
+                self::log('MAIL_ERROR', [
+                    'type'  => 'contact_auto_reply',
+                    'to'    => $email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Log tổng hợp
+        self::log('CONTACT_MAIL', [
+            'from'       => $email,
+            'name'       => $name,
+            'admin_sent' => $result['admin'],
+            'reply_sent' => $result['reply'],
+        ]);
+
+        return $result;
     }
 
     // ── EMAIL TEMPLATES (HTML) ──
