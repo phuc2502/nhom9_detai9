@@ -427,6 +427,114 @@ in the Software without restriction...
 
 ---
 
+## 👥 Nhóm phát triển
+
+> **Nhóm 9 — Đề tài 9** · Môn Lập trình Web PHP
+
+| # | Thành viên | Vai trò chính |
+|---|-----------|--------------|
+| 1 | 🗄️ **Thu Lan** | Database Admin & OOP Core Models |
+| 2 | 🎨 **Duyên** | Frontend Core & Logic Tìm kiếm |
+| 3 | 🏗️ **Lâm Trúc** | Backend Logic & Builder Pattern |
+| 4 | 🔐 **Thiện Phúc** | Xác thực người dùng & PHPMailer |
+| 5 | 💳 **Kiều Ngân** | API Thanh toán VietQR & Thuật toán giá |
+
+---
+
+### 🗄️ Thu Lan — Database Admin & OOP Core Models
+
+**Phụ trách:**
+- Lên mô hình **Entity-Relationship (E-R)**, thiết kế toàn bộ CSDL gồm các bảng `rooms`, `users`, `bookings`
+- Chịu trách nhiệm tạo và quản lý file `hotelbooking.sql`
+- Viết class kết nối `core/Database.php` (Singleton PDO)
+- Cung cấp các public method tái sử dụng cho toàn nhóm: `getRoomList()`, `insertBooking()`, `checkLogin()`
+
+```php
+// Ví dụ: Database.php — Singleton PDO connection
+class Database {
+    private static ?PDO $instance = null;
+    public static function getInstance(): PDO { ... }
+}
+```
+
+---
+
+### 🎨 Duyên — Logic Tìm kiếm & Giao diện Core
+
+**Phụ trách:**
+- Thiết kế HTML/CSS/JS cho: Trang chủ, Form tìm kiếm, Danh sách phòng, Chi tiết phòng
+- **PHP Logic:** 100% hệ thống **Tìm kiếm & Kiểm tra phòng trống**
+  - Xử lý tham số Form (GET/POST), validate ngày check-in/check-out bằng Regex
+  - Thuật toán lọc dữ liệu, hiển thị **"Hết phòng"** hoặc **"Gợi ý phòng tương tự"**
+  - Gọi method của Thu Lan để bóc tách mảng kết quả
+
+```php
+// Ví dụ: Validate ngày bằng Regex
+$datePattern = '/^\d{4}-\d{2}-\d{2}$/';
+if (!preg_match($datePattern, $checkIn)) {
+    $searchError = 'Ngày không đúng định dạng.';
+}
+```
+
+---
+
+### 🏗️ Lâm Trúc — Backend Logic & Builder Pattern
+
+**Phụ trách:**
+- Hỗ trợ Duyên ráp PHP Logic vào form đặt phòng HTML
+- Khởi tạo cấu trúc class `Booking` (OOP Model)
+- Code luồng tiếp nhận thông tin người đặt phòng
+- Triển khai **Builder Pattern** (`BookingBuilder`) khi tạo đơn — yêu cầu môn học
+- Giao tiếp với DB thông qua public method của Thu Lan, không tự chạy SQL trực tiếp
+
+```php
+// Ví dụ: Builder Pattern
+$booking = (new BookingBuilder())
+    ->setRoom($room)
+    ->setCheckIn($checkIn)
+    ->setCheckOut($checkOut)
+    ->setGuestInfo($fullname, $phone, $email)
+    ->build();
+```
+
+---
+
+### 🔐 Thiện Phúc — Xác thực người dùng & PHPMailer
+
+**Phụ trách:**
+- Ráp PHP vào trang Login, Đăng ký (giao diện do Duyên cấp)
+- **Session/Cookie Management:** Kiểm soát trạng thái đăng nhập người dùng
+- Mã hóa mật khẩu (`password_hash` / `password_verify`)
+- Phân quyền Khách / Admin
+- Tích hợp **PHPMailer** — gửi email xác nhận tự động qua Gmail SMTP
+- Giao tiếp với DB thông qua public method của Thu Lan
+
+```php
+// Ví dụ: PHPMailer Factory
+$mail = self::createMailer();
+$mail->addAddress($booking->getEmail());
+$mail->Subject = "[LuxStay] Xác nhận đặt phòng";
+$mail->send();
+```
+
+---
+
+### 💳 Kiều Ngân — API Thanh toán VietQR & Thuật toán giá
+
+**Phụ trách:**
+- Thiết kế giao diện trang hiển thị đơn đặt và trạng thái thanh toán
+- **Thuật toán tính tiền:** Tính tổng số tiền dựa trên số đêm (check-out trừ check-in), tăng 20% cho đêm cuối tuần
+- Tích hợp **SePay API** để sinh mã **VietQR động** tại màn hình chờ thanh toán
+- Xử lý polling trạng thái thanh toán (AJAX mỗi 5 giây) và Webhook từ SePay
+
+```php
+// Ví dụ: Tính tiền có phụ thu cuối tuần
+if (in_array($dayOfWeek, [5, 6])) {
+    $nightPrice *= 1.20; // +20% thứ 6, thứ 7
+}
+$total += $nightPrice;
+```
+
 ---
 
 <div align="center">
