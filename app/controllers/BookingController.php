@@ -168,12 +168,26 @@ class BookingController
             }
             $_SESSION['last_booking_id'] = $booking->getId();
 
-            // header('Location:...'): chuyển hướng trình duyệt sang URL khác
-            // Nếu chọn VietQR → trang QR, nếu tại quầy → trang confirm
+            // Nếu chọn VietQR → trang QR, nếu tại quầy → xác nhận luôn + gửi email
             if ($payment === 'sepay') {
                 $_SESSION['payment_booking_id'] = $booking->getId();
                 header('Location: ' . $this->url('payment/qr') . '&booking_id=' . $booking->getId());
             } else {
+                // Tại quầy: giả định đã thanh toán → đổi status confirmed
+                $updated = $this->service->updateBookingStatus($booking->getId(), 'confirmed');
+
+                // Gửi email xác nhận thanh toán nếu update thành công
+                if ($updated) {
+                    try {
+                        $freshBooking = $this->service->findBookingById($booking->getId());
+                        if ($freshBooking) {
+                            MailService::sendPaymentConfirmation($freshBooking);
+                        }
+                    } catch (\Throwable $e) {
+                        // Ghi log, không ảnh hưởng redirect
+                    }
+                }
+
                 header('Location: ' . $this->url('booking/confirm'));
             }
             exit;

@@ -1,2 +1,4 @@
 [2026-05-07 14:43:57] [MAIL_ERROR      ] {"type":"booking_confirmation","to":"26a4042128@hvnh.edu.vn","error":"SMTP Error: Could not authenticate."}
 [2026-05-07 14:50:33] [BOOKING_MAIL    ] {"to":"26a4042128@hvnh.edu.vn","bookingId":5,"status":"sent"}
+[2026-05-07 15:10:58] [BOOKING_MAIL    ] {"to":"26a4042128@hvnh.edu.vn","bookingId":6,"status":"sent"}
+[2026-05-07 15:11:03] [PAYMENT_MAIL    ] {"to":"26a4042128@hvnh.edu.vn","bookingId":6,"status":"sent"}
