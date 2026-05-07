@@ -1,6 +1,38 @@
 <?php include ROOT_PATH . '/app/views/layout/header.php';
 require_once ROOT_PATH . '/app/views/data.php';
+
+// Toast thông báo sau khi hủy / hết hạn
+$notify = $_GET['notify'] ?? '';
 ?>
+
+<?php if ($notify === 'cancelled' || $notify === 'expired'): ?>
+<div id="notify-toast" style="
+    position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:9999;
+    background:#fff; border-radius:14px; padding:16px 24px; min-width:300px; max-width:90vw;
+    box-shadow:0 8px 30px rgba(0,0,0,.18); display:flex; align-items:center; gap:14px;
+    border-left:5px solid <?= $notify === 'cancelled' ? '#ef5350' : '#ff9800' ?>;">
+    <span style="font-size:28px;"><?= $notify === 'cancelled' ? '✅' : '⏰' ?></span>
+    <div>
+        <div style="font-weight:700; font-size:15px; color:#222;">
+            <?= $notify === 'cancelled' ? 'Đã hủy đặt phòng' : 'Hết thời gian giữ phòng' ?>
+        </div>
+        <div style="font-size:13px; color:#777; margin-top:3px;">
+            <?= $notify === 'cancelled'
+                ? 'Phòng đã trở về trạng thái trống.'
+                : 'QR hết hạn 15 phút. Phòng đã được giải phóng — hãy đặt lại.' ?>
+        </div>
+    </div>
+    <button onclick="this.parentElement.remove()"
+            style="margin-left:auto; background:none; border:none; font-size:20px;
+                   cursor:pointer; color:#bbb; line-height:1;">✕</button>
+</div>
+<script>
+    setTimeout(() => {
+        const t = document.getElementById('notify-toast');
+        if (t) { t.style.transition='opacity .5s'; t.style.opacity='0'; setTimeout(()=>t.remove(),500); }
+    }, 5000);
+</script>
+<?php endif; ?>
 
 <main>
 <section class="section-rooms">
@@ -125,9 +157,19 @@ require_once ROOT_PATH . '/app/views/data.php';
                   <?php endforeach; ?>
                 </div>
               <?php endif; ?>
-              <div class="card-badges"><span class="badge green">Còn phòng</span></div>
+              <div class="card-badges">
+                <?php if ($room->isActive()): ?>
+                  <span class="badge green">Còn phòng</span>
+                <?php else: ?>
+                  <span class="badge" style="background:#fee2e2;color:#dc2626;">Bảo trì</span>
+                <?php endif; ?>
+              </div>
               <div class="card-actions">
-                <a href="?action=booking&room_id=<?= $room->getId() ?>"    class="btn-book">Đặt ngay</a>
+                <?php if ($room->isActive()): ?>
+                  <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book">Đặt ngay</a>
+                <?php else: ?>
+                  <button class="btn-book" disabled style="opacity:0.5;cursor:not-allowed;background:#aaa;">Hết phòng</button>
+                <?php endif; ?>
                 <a href="?action=room-detail&room_id=<?= $room->getId() ?>" class="btn-detail">Chi tiết</a>
               </div>
             </div>
