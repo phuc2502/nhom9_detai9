@@ -177,20 +177,12 @@ $notify = $_GET['notify'] ?? '';
                 </div>
               </div>
               <?php endif; ?>
-              <div class="card-badges">
-                <?php if ($room->isActive()): ?>
-                  <span class="badge green">Còn phòng</span>
-                <?php else: ?>
-                  <span class="badge" style="background:#fee2e2;color:#dc2626;">Bảo trì</span>
-                <?php endif; ?>
-              </div>
-              <div class="card-actions">
-                <?php if ($room->isActive()): ?>
-                  <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book">Đặt ngay</a>
-                <?php else: ?>
-                  <button class="btn-book" disabled style="opacity:0.5;cursor:not-allowed;background:#aaa;">Hết phòng</button>
-                <?php endif; ?>
-                <a href="?action=room-detail&room_id=<?= $room->getId() ?>" class="btn-detail">Chi tiết</a>
+              <div class="rch-meta-row">
+                <span class="rch-meta-label">KHÁCH HÀNG</span>
+                <span class="rch-guests">
+                  👤 <?= $room->getMaxGuests() ?> Người Lớn &nbsp;
+                  🐣 0 Trẻ Em
+                </span>
               </div>
             </div>
           </div>
@@ -199,8 +191,10 @@ $notify = $_GET['notify'] ?? '';
           <div class="rch-price-col">
             <div class="rch-price-wrap">
               <span class="rch-price"><?= number_format($room->getPricePerNight(), 0, ',', '.') ?></span>
-              <span class="rch-price-unit"><span>vnd mỗi đêm</span>
-<span class="rch-vat">Chưa VAT</span></span>
+              <span class="rch-price-unit">
+                <span>vnd mỗi đêm</span>
+                <span class="rch-vat">Chưa VAT</span>
+              </span>
             </div>
             <a href="?action=booking&room_id=<?= $room->getId() ?>" class="btn-book-h">Đặt Ngay</a>
             <a href="?action=room-detail&room_id=<?= $room->getId() ?>" class="btn-detail-h">Chi Tiết</a>
@@ -420,7 +414,7 @@ $notify = $_GET['notify'] ?? '';
 .rch-vat {
   background: #fef3c7; color: #92400e;
   font-size: .72rem; font-weight: 600;
-  padding: 2px 7px; border-radius: 10px; margin-left: 4px;
+  padding: 2px 7px; border-radius: 10px;
 }
 .btn-book-h {
   display: block; text-align: center;
@@ -448,11 +442,6 @@ $notify = $_GET['notify'] ?? '';
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
   gap: 20px;
-}
-.card-amenities { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0; }
-.am-tag {
-  font-size:.7rem; background:#e0f7f4; color:#00796b;
-  padding:2px 7px; border-radius:12px;
 }
 
 /* ---- Phân trang ---- */
