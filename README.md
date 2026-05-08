@@ -494,7 +494,6 @@ in the Software without restriction...
 
 **Phụ trách:**
 - Thiết kế giao diện trang hiển thị đơn đặt và trạng thái thanh toán
-- **Thuật toán tính tiền:** Tính tổng số tiền dựa trên số đêm (check-out trừ check-in), tăng 20% cho đêm cuối tuần
 - Tích hợp **SePay API** để sinh mã **VietQR động** tại màn hình chờ thanh toán
 - Xử lý polling trạng thái thanh toán (AJAX mỗi 5 giây) và Webhook từ SePay
 
